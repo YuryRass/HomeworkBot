@@ -7,7 +7,7 @@ config: Config = load_config()
 Base = declarative_base()
 engine = create_engine(f'sqlite:///{config.db.database_name}.sqlite')
 
-session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=engine)
 
 
 def create_db():
