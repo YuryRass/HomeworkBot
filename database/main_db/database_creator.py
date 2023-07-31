@@ -1,3 +1,6 @@
+"""
+    Создание и инициализация основной БД
+"""
 from database.main_db.first_run_configurator import FirstRunConfigurator
 from model.pydantic.db_creator_settings import DbCreatorSettings
 from model.main_db.group import Group
@@ -10,18 +13,27 @@ from model.main_db.teacher_group import TeacherGroup
 from model.main_db.admin import Admin
 from model.main_db.chat import Chat
 from model.main_db.student_ban import StudentBan
-
 from database.main_db.database import create_db, Session
 
 
 def create_main_db(settings: DbCreatorSettings) -> None:
+    """
+        Создает и инициализирует основную БД
+        Параметры:
+        settings (DbCreatorSettings): настройки для первоначальной
+    инициализации БД.
+    """
+    # Создание БД
     create_db()
 
+    # Если REMOTE_CONFIGURATION is False, то инициализируем БД
+    # из конфиг. файлов settings.disciplines_path и settings.excel_data_path
     if not settings.remote_configuration:
         fill_db_from_files(
             settings.disciplines_path,
             settings.excel_data_path
         )
+    # В противном случае добавляем в таблицу 'Admin' Telegram ID администратора
     else:
         session = Session()
         session.add(Admin(telegram_id=settings.default_admin))
@@ -31,6 +43,14 @@ def create_main_db(settings: DbCreatorSettings) -> None:
 
 def fill_db_from_files(disciplines_path: str,
                        excel_data_path: str) -> None:
+    """
+        Инициализация основной БД
+        Параметры:
+        excel_data_path (str): путь до Excel файла, где содержится
+    информация по студентам и преподавателям.
+        disciplines_path (str): путь до JSON файла, где содержится
+    информация по учебным дисциплинам.
+    """
     configurator = FirstRunConfigurator(disciplines_path, excel_data_path)
     disciplines: dict[str, Discipline] = {}
     groups: dict[str, Group] = {}
