@@ -7,9 +7,9 @@ from pydantic import BaseModel
 
 class DisciplineWork(BaseModel):
     """
-        Класс, описывающий pydantic модель 'Дисциплина'
+        Класс, описывающий pydantic модель 'Лабораторная работа по дисциплине'
         Атрибуты:
-        number (int): номер дисциплины.
+        number (int): номер лаб. работы.
         amount_tasks (int): количество заданий.
         deadline (date): крайняя дата выполенения.
     """
@@ -27,7 +27,7 @@ class DisciplineWorksConfig(BaseModel):
         path_to_test (str): путь до тестов для данной дисциплины.
         path_to_answer (str): путь до ответов, куда будут загружать студенты.
         language (str): язык программирования.
-        works (list[DisciplineWork]): работы данной дисциплины.
+        works (list[DisciplineWork]): список работ данной дисциплины.
 
     """
     full_name: str
@@ -43,6 +43,5 @@ class DisciplinesConfig(BaseModel):
         Класс, описывающий pydantic модель 'Конфигурация дисциплин'
         Атрибуты:
         disciplines (list[DisciplineWorksConfig]): список дисциплин.
-
     """
     disciplines: list[DisciplineWorksConfig]

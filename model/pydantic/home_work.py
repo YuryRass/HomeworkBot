@@ -42,7 +42,8 @@ class HomeWork(BaseModel):
 
 class DisciplineHomeWorks(BaseModel):
     """
-        Класс, описывающий pydantic модель 'Лабораторные работы'
+        Класс, описывающий pydantic модель
+        'Лабораторные работы по учебной дисциплине'
         Атрибуты:
         home_works (list[HomeWork]): список лаб. работ.
 

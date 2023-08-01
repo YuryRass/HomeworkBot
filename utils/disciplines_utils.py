@@ -25,7 +25,7 @@ def disciplines_config_to_json(data: DisciplinesConfig) -> str:
         Конвертирует pydantic модель 'Конфигурация дисциплин'
         в JSON формат в виде строки и возвращает ее.
         Параметры:
-        data (DisciplinesConfig): конфиг. данные учебн. дисциплин.
+        data (DisciplinesConfig): конфиг. данные учебных дисциплин.
 
     """
     return json.dumps(
@@ -65,17 +65,7 @@ def disciplines_works_to_json(data: DisciplineWorksConfig) -> str:
     )
 
 
-def load_discipline(downloaded_data: bytes) -> DisciplineWorksConfig:
-    """
-        Загрузка учебной дисциплины и перевод ее данных в pydantic модель
-        Параметры:
-        downloaded_data (bytes): массив данных в байтах по учебной дисциплине.
-    """
-    data = json.loads(downloaded_data)
-    return DisciplineWorksConfig(**data)
-
-
-def disciplines_works_from_json(json_data: str) -> DisciplineWorksConfig:
+def disciplines_works_from_json(json_data: str | bytes) -> DisciplineWorksConfig:
     """
         Загрузка учебной дисциплины и перевод ее данных в pydantic модель
         Параметры:

@@ -57,6 +57,8 @@ def fill_db_from_files(disciplines_path: str,
 
     session = Session()
     start_disciplines = configurator.disciplines
+
+    # инициализция таблицы 'disciplines'
     for it in start_disciplines:
         disciplines[it.short_name] = Discipline(
             full_name=it.full_name,
@@ -71,6 +73,7 @@ def fill_db_from_files(disciplines_path: str,
         session.add(disciplines[it.short_name])
 
     temp_students: dict[str, list[Student]] = {}
+    # инициализация таблиц groups и students
     for it in configurator.students_config:
         for group_name, students_raw_list in configurator.students_config[it].items():
             temp_students[it] = []
@@ -87,6 +90,9 @@ def fill_db_from_files(disciplines_path: str,
                 temp_students[it].append(student)
                 session.add(student)
 
+    # инициализация таблиц groups, teachers, teacher_group.
+    # И также инициализация таблицы admin, в случае
+    # если у преподавателя параметр is_admin = True
     for dis, teacher_group in configurator.teachers_config.items():
         for group_name, teachers_raw_list in teacher_group.items():
             if group_name not in groups:
@@ -118,6 +124,7 @@ def fill_db_from_files(disciplines_path: str,
 
     session.flush()
 
+    # инициализация таблицы assigned_discipline
     for dis, student_list in temp_students.items():
         for student in student_list:
             discipline = disciplines[dis]
