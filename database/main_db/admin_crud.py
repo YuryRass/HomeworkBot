@@ -5,6 +5,7 @@ from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
 
 from model.main_db.admin import Admin
+from model.main_db.chat import Chat
 
 
 def is_admin_no_teacher_mode(telegram_id: int) -> bool:
@@ -56,3 +57,13 @@ def is_admin_and_teacher(telegram_id: int) -> bool:
     _is_admin = is_admin(telegram_id)
     _is_teacher = is_teacher(telegram_id)
     return _is_admin and _is_teacher
+
+
+def add_chat(chat_id: int) -> None:
+    """
+        Добавление ID чата в таблицу Chat
+    """
+
+    with Session() as session:
+        session.add(Chat(chat_id=chat_id))
+        session.commit()

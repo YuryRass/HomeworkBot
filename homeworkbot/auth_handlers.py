@@ -1,3 +1,7 @@
+"""
+    Модуль auth_handlers.py осуществляет первичную авторизацию
+    пользователя в Telegram чате.
+"""
 from aiogram import Router
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.types import Message, InlineKeyboardMarkup, \
@@ -7,6 +11,7 @@ from aiogram.filters.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from homeworkbot.configuration import bot
+from homeworkbot.admin_handlers import admin_keyboard
 
 import database.main_db.common_crud as common_crud
 import database.main_db.student_crud as student_crud
@@ -17,6 +22,11 @@ router: Router = Router()
 
 
 class AuthStates(StatesGroup):
+    """
+        Класс состояний для авторизации пользователя
+        Атрибуты:
+        full_name (State): ФИО Tg пользователя.
+    """
     full_name = State()
 
 
@@ -38,6 +48,7 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
         # если пользователь присутсвует
         else:
             return True
+    # пользователя нет в чате
     except TelegramAPIError as ex:
         if ex.message == 'Bad Request: user not found':
             return False
@@ -61,7 +72,7 @@ async def process_start_command(message: Message):
         case UserEnum.Admin:
             await message.answer(
                 text='<b>О, мой повелитель! Бот готов издеваться над студентами!!!</b>',
-                # TODO: клавиатура
+                reply_markup=admin_keyboard(message)
             )
         case UserEnum.Teacher:
             await message.answer(
@@ -107,6 +118,10 @@ async def process_start_command(message: Message):
 @router.callback_query(lambda call: 'start_' in call.data,
                        StateFilter(default_state))
 async def callback_auth_query(call: CallbackQuery, state: FSMContext):
+    """
+        Начальныйц этап идентификации пользователя
+        после получения его согласия на это.
+    """
     type_callback = call.data.split('_')[0]
     match type_callback:
         case 'start':
@@ -130,6 +145,10 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
 
 @router.callback_query(StateFilter(AuthStates.full_name))
 async def input_full_name(message: Message, state: FSMContext):
+    """
+        Ввод полного имени (ФИО) студентом
+        для его успешной авторизации в чате
+    """
     full_name = message.text
     if len(full_name.split(' ')) != 3:
         await message.answer(
