@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 from database.main_db import admin_crud
 from homeworkbot.filters import IsOnlyAdminCommands
 from homeworkbot.admin_handlers.add_chat import _handle_add_chat
+from homeworkbot.admin_handlers.add_teacher import _handle_add_teacher
 from homeworkbot import bot
 
 router: Router = Router()
@@ -212,7 +213,7 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.ADD_STUDENT:
             ...
         case AdminCommand.ADD_TEACHER:
-            ...
+            await _handle_add_teacher(message, state)
         case AdminCommand.ADD_STUDENTS_GROUP:
             ...
         case AdminCommand.ADD_DISCIPLINE:

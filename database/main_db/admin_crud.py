@@ -6,6 +6,7 @@ from database.main_db.teacher_crud import is_teacher
 
 from model.main_db.admin import Admin
 from model.main_db.chat import Chat
+from model.main_db.teacher import Teacher
 
 
 def is_admin_no_teacher_mode(telegram_id: int) -> bool:
@@ -66,4 +67,16 @@ def add_chat(chat_id: int) -> None:
 
     with Session() as session:
         session.add(Chat(chat_id=chat_id))
+        session.commit()
+
+
+def add_teacher(full_name: str, tg_id: int) -> None:
+    """
+    Функция добавления преподавателя.
+    Параметры:
+    param full_name (str): ФИО препода.
+    param tg_id (int): идентификатор препода в телегераме.
+    """
+    with Session() as session:
+        session.add(Teacher(full_name=full_name, telegram_id=tg_id))
         session.commit()

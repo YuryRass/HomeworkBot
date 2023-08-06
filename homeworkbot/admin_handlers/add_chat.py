@@ -1,3 +1,7 @@
+"""
+    Модуль add_chat.py реализует добавление ID telegram чата
+    в таблицу Chat.
+"""
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command, StateFilter
