@@ -48,7 +48,6 @@ async def teacher_name_correct(message: Message, state: FSMContext):
     """
     fio_pattern: re.Pattern = re.compile(
         r'[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]')
-    # if len(message.text.split(' ')) == 3:
     if fio_pattern.match(message.text):
         await state.set_state(state=AdminStates.teacher_tg_id)
         await message.answer(text="Введите Telegram ID преподавателя:")
@@ -64,7 +63,7 @@ async def teacher_id_correct(message: Message, state: FSMContext):
         добавлене препода в таблицу.
     """
     if message.text.isdigit():
-        teacher_name: str = await state.get_data()
+        teacher_name = await state.get_data()
         admin_crud.add_teacher(teacher_name['teacher_name'], int(message.text))
         await message.answer(text="Преподаватель успешно добавлен!")
         await state.clear()

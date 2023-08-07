@@ -1,5 +1,6 @@
 """
-    Модуль admin_crud.py выполняет CRUD-операции с таблицей 'Admin'
+    Модуль admin_crud.py выполняет CRUD-операции с таблицами
+    основной базы данных.
 """
 from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
@@ -7,6 +8,13 @@ from database.main_db.teacher_crud import is_teacher
 from model.main_db.admin import Admin
 from model.main_db.chat import Chat
 from model.main_db.teacher import Teacher
+from model.main_db.group import Group
+from model.main_db.teacher_group import TeacherGroup
+from model.main_db.assigned_discipline import AssignedDiscipline
+from model.main_db.discipline import Discipline
+from model.main_db.student import Student
+from utils.disciplines_utils import disciplines_works_from_json
+from utils.homework_utils import create_homeworks, homeworks_to_json
 
 
 def is_admin_no_teacher_mode(telegram_id: int) -> bool:
@@ -72,11 +80,93 @@ def add_chat(chat_id: int) -> None:
 
 def add_teacher(full_name: str, tg_id: int) -> None:
     """
-    Функция добавления преподавателя.
-    Параметры:
-    param full_name (str): ФИО препода.
-    param tg_id (int): идентификатор препода в телегераме.
+        Функция добавления преподавателя.
+        Параметры:
+        param full_name (str): ФИО препода.
+        param tg_id (int): идентификатор препода в телегераме.
     """
     with Session() as session:
         session.add(Teacher(full_name=full_name, telegram_id=tg_id))
         session.commit()
+
+
+def get_teachers() -> list[Teacher]:
+    """
+        Получение списка преподавателей
+    """
+    with Session() as session:
+        return session.query(Teacher).all()
+
+
+def get_not_assign_teacher_groups(teacher_id: int) -> list[Group]:
+    """
+        Возвращает список групп, которые не назначены преподу.
+        Параметры:
+        teacher_id (int): ID препода.
+    """
+    with Session() as session:
+        # получаем сначала список групп, которые назначены преподу
+        assign_group = session.query(TeacherGroup).filter(
+            TeacherGroup.teacher_id == teacher_id
+        )
+        assign_group = [it.group_id for it in assign_group]
+        # Далее получаем список групп, которых нет в списке assign_group
+        not_assign_group = session.query(Group).filter(
+            Group.id.not_in(assign_group)
+        ).all()
+        return not_assign_group
+
+
+def assign_teacher_to_group(teacher_id: int, group_id: int) -> None:
+    """
+        Назначает группу преподу.
+        Параметры:
+        teacher_id (int): ID препода.
+        group_id (int): ID группы.
+    """
+    with Session() as session:
+        session.add(TeacherGroup(teacher_id=teacher_id, group_id=group_id))
+        session.commit()
+
+def get_all_groups() -> list[Group]:
+    """
+        Возвращает список всех учебных групп.
+    """
+    with Session() as session:
+        return session.query(Group).all()
+
+
+def add_student(full_name: str, group_id: int, discipline_id: int):
+    """
+        Добавляет студента в БД, заполняя
+    таблицы Student и AssignedDiscipline
+        Параметры:
+        full_name (str): ФИО студента.
+        group_id (int): ID группы.
+        discipline_id (int): ID дисциплины.
+    """
+    session = Session()
+    # добавляем студента
+    student = Student(full_name=full_name, group=group_id)
+    session.add(student)
+    # записываем все изменения в БД,
+    # чтобы потом вытащить из нее ID добавленного студента
+    session.flush()
+
+    # получаем все данные о дисциплине по ее ID
+    discipline: Discipline = session.query(Discipline).get(discipline_id)
+    # получаем данные по лаб. работам для данной дисциплины
+    empty_homework = create_homeworks(
+        disciplines_works_from_json(discipline.works)
+    )
+    # заполняем таблицу AssignedDiscipline
+    session.add(
+        AssignedDiscipline(
+            student_id=student.id,
+            discipline_id=discipline_id,
+            home_work=homeworks_to_json(empty_homework)
+        )
+    )
+    # сохраняем изменения и закрываем сессию
+    session.commit()
+    session.close()

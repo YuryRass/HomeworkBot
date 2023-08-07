@@ -1,5 +1,10 @@
+"""
+    Модуль filters.py реализует различные фильтры,
+    которые будут применяться в роутерах.
+"""
 from aiogram.types import Message
 from aiogram.filters import BaseFilter
+from aiogram.filters.callback_data import CallbackData
 from database.main_db import admin_crud, teacher_crud, \
     student_crud
 
@@ -31,3 +36,18 @@ class IsOnlyAdminCommands(BaseFilter):
         command: str = message.text
         return  admin_crud.is_admin(message.from_user.id) and \
             command in self.admin_commands.values()
+
+
+class AddStudentCallbackFactory(CallbackData,
+                                prefix='StudentADD',
+                                sep='_'):
+    """
+        Фабрика коллбэков по добавлению студента.
+    """
+    group_id: int # ID группы, назначенный студенту
+    discipline_id: int # ID дисциплины, назначенный студенту
+
+    # Два этапа при добавлении студента в БД:
+    # 1. Добавление студента в таблицу Student.
+    # 2. Загрузка дисциплины для студента.
+    next_step: int

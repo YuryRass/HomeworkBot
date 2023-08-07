@@ -9,6 +9,8 @@ from database.main_db import admin_crud
 from homeworkbot.filters import IsOnlyAdminCommands
 from homeworkbot.admin_handlers.add_chat import _handle_add_chat
 from homeworkbot.admin_handlers.add_teacher import _handle_add_teacher
+from homeworkbot.admin_handlers.utils import create_teachers_button
+from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot import bot
 
 router: Router = Router()
@@ -211,7 +213,7 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.ADD_CHAT:
             await _handle_add_chat(message, state)
         case AdminCommand.ADD_STUDENT:
-            ...
+            await _handle_add_student(message, state)
         case AdminCommand.ADD_TEACHER:
             await _handle_add_teacher(message, state)
         case AdminCommand.ADD_STUDENTS_GROUP:
@@ -252,7 +254,7 @@ async def handle_commands(message: Message, state: FSMContext):
                 reply_markup=__menu_list[index](message),
             )
         case AdminCommand.SET_TEACHER_TO_GROUP:
-            ...
+            await create_teachers_button(message, 'assignTeacherGR')
         case AdminCommand.SET_TEACHER_TO_DISCIPLINE:
             ...
         case AdminCommand.DELETE_GROUP:
