@@ -2,8 +2,13 @@
     Модуль admin_crud.py выполняет CRUD-операции с таблицами
     основной базы данных.
 """
+from sqlalchemy.exc import IntegrityError
+
 from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
+from database.main_db.crud_exceptions import (
+    DisciplineNotFoundException, GroupAlreadyExistException
+)
 
 from model.main_db.admin import Admin
 from model.main_db.chat import Chat
@@ -16,8 +21,10 @@ from model.main_db.student import Student
 from utils.disciplines_utils import disciplines_works_from_json
 from utils.homework_utils import create_homeworks, homeworks_to_json
 from model.pydantic.discipline_works import DisciplineWorksConfig
+from model.pydantic.students_group import StudentsGroup
 from utils.disciplines_utils import disciplines_works_from_json, \
     disciplines_works_to_json, counting_tasks
+
 
 def is_admin_no_teacher_mode(telegram_id: int) -> bool:
     """
@@ -193,3 +200,57 @@ def add_discipline(discipline: DisciplineWorksConfig) -> None:
             )
         )
         session.commit()
+
+
+def add_students_group(student_groups: list[StudentsGroup]) -> None:
+    """
+        Функция добавления групп студентов.
+        Параметры:
+        student_groups (list[StudentsGroup]): Список с параметрами групп.
+
+        Исключения:
+        DisciplineNotFoundException: дисциплина не найдена.
+        GroupAlreadyExistException: если группа с таким названием уже существует.
+    """
+    session = Session()
+    session.begin() # начало транзакции
+    try:
+        for it in student_groups:
+            # добавляем группы
+            group = Group(group_name=it.group_name)
+            session.add(group)
+            session.flush()
+
+            # добавялем студентов
+            students = [Student(full_name=student_raw, group=group.id) for student_raw in it.students]
+            session.add_all(students)
+            session.flush()
+
+            # заполняем таблицу AssignedDiscipline
+            for discipline in it.disciplines_short_name:
+                current_discipline = session.query(Discipline).filter(
+                    Discipline.short_name.ilike(f"%{discipline}%")
+                ).first()
+                if current_discipline is None:
+                    raise DisciplineNotFoundException(f'{discipline} нет в БД')
+
+                empty_homework = create_homeworks(
+                    disciplines_works_from_json(current_discipline.works)
+                )
+                session.add_all([
+                    AssignedDiscipline(
+                        student_id=student.id,
+                        discipline_id=current_discipline.id,
+                        home_work=homeworks_to_json(empty_homework)
+                    ) for student in students]
+                )
+        session.commit() # сохраняем изменения
+        
+    except DisciplineNotFoundException as ex:
+        session.rollback()
+        raise ex
+    except IntegrityError as ex:
+        session.rollback()
+        raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
+    finally:
+        session.close()

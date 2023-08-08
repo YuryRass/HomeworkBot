@@ -12,6 +12,7 @@ from homeworkbot.admin_handlers.add_teacher import _handle_add_teacher
 from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot.admin_handlers.add_discipline import _handle_add_discipline
+from homeworkbot.admin_handlers.add_students_group import _handle_add_students_group
 
 from homeworkbot import bot
 router: Router = Router()
@@ -218,7 +219,7 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.ADD_TEACHER:
             await _handle_add_teacher(message, state)
         case AdminCommand.ADD_STUDENTS_GROUP:
-            ...
+            await _handle_add_students_group(message, state)
         case AdminCommand.ADD_DISCIPLINE:
             await _handle_add_discipline(message, state)
         case AdminCommand.BAN_STUDENT:

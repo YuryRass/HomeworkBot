@@ -1,9 +1,14 @@
+"""
+    Модуль add_discipline.py добавляет учебную дисциплину
+    в таблицу Discipline. Данные по учебной дисицплине
+    отправляет админ в JSON формате.
+"""
 from pathlib import Path
 
 from aiogram import F, Router
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ContentType, Document
+from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
 
 from homeworkbot.admin_handlers.utils import start_upload_file_message, finish_upload_file_message
@@ -57,7 +62,7 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
         # получаем экземпляр байтового потока с данными из файла
         downloaded_file = await bot.download_file(file_info.file_path)
 
-        # загружаем данные по дисципдине и переводим их в pydantic модель
+        # загружаем данные по дисциплине и переводим их в pydantic модель
         discipline = disciplines_works_from_json(downloaded_file.read())
 
         # добавляем дисциплину в таблицу
@@ -65,8 +70,8 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
 
         path = Path.cwd() # текущий рабочий каталог
 
-        # создаем директории, где будут храниться тесты и ответы студентов
-        # для загруженной дисицплины.
+        # создаем директории, где будут храниться тесты
+        # и ответы студентов для загруженной дисицплины
         Path(path.joinpath(discipline.path_to_test)).mkdir(parents=True, exist_ok=True)
         Path(path.joinpath(discipline.path_to_answer)).mkdir(parents=True, exist_ok=True)
 

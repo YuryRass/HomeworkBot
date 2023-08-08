@@ -8,8 +8,9 @@ from homeworkbot import auth_handlers
 from homeworkbot.admin_handlers import (
     admin_menu, add_chat,
     add_teacher, assign_teacher_to_group,
-    add_student, add_discipline
-)
+    add_student, add_discipline,
+    add_students_group
+) 
 
 
 
@@ -25,6 +26,7 @@ async def main():
     dp.include_router(assign_teacher_to_group.router)
     dp.include_router(add_student.router)
     dp.include_router(add_discipline.router)
+    dp.include_router(add_students_group.router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=True)
