@@ -15,7 +15,9 @@ from model.main_db.discipline import Discipline
 from model.main_db.student import Student
 from utils.disciplines_utils import disciplines_works_from_json
 from utils.homework_utils import create_homeworks, homeworks_to_json
-
+from model.pydantic.discipline_works import DisciplineWorksConfig
+from utils.disciplines_utils import disciplines_works_from_json, \
+    disciplines_works_to_json, counting_tasks
 
 def is_admin_no_teacher_mode(telegram_id: int) -> bool:
     """
@@ -170,3 +172,24 @@ def add_student(full_name: str, group_id: int, discipline_id: int):
     # сохраняем изменения и закрываем сессию
     session.commit()
     session.close()
+
+def add_discipline(discipline: DisciplineWorksConfig) -> None:
+    """
+        Добавление дисциплины в таблицу Discipline
+        Параметры:
+        discipline (DisciplineWorksConfig): добавляемая дисциплина.
+    """
+    with Session() as session:
+        session.add(
+            Discipline(
+                full_name=discipline.full_name,
+                short_name=discipline.short_name,
+                path_to_test=discipline.path_to_test,
+                path_to_answer=discipline.path_to_answer,
+                works=disciplines_works_to_json(discipline),
+                language=discipline.language,
+                max_tasks=counting_tasks(discipline),
+                max_home_works=len(discipline.works)
+            )
+        )
+        session.commit()

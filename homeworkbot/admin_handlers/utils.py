@@ -31,3 +31,24 @@ async def create_teachers_button(message: Message, callback_prefix: str):
     )
     await message.answer(text="Выберите преподавателя:",
                          reply_markup=teachers_kb.as_markup())
+
+async def start_upload_file_message(message: Message) -> Message:
+    """
+        Начало загрузки файла, отправленного в чат.
+        Возвращает объект класса SendMessage
+    """
+    return await message.answer(
+        text="<i>Загружаем ваш файл...</i>",
+        # Отключает предварительный просмотр ссылок в сообщении
+        disable_web_page_preview=True,
+    )
+
+
+async def finish_upload_file_message(message: Message,
+                                     text: str = '<i>Файл загружен!</i>') -> None:
+
+    """
+        Завершение загрузки файла.
+    """
+
+    await message.edit_text(text=text)
