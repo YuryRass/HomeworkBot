@@ -232,7 +232,8 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
                     Discipline.short_name.ilike(f"%{discipline}%")
                 ).first()
                 if current_discipline is None:
-                    raise DisciplineNotFoundException(f'{discipline} нет в БД')
+                    raise DisciplineNotFoundException('К сожалению, дисциплины '
+                                                      f'"{discipline}" нет в БД 😒')
 
                 empty_homework = create_homeworks(
                     disciplines_works_from_json(current_discipline.works)
@@ -245,7 +246,7 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
                     ) for student in students]
                 )
         session.commit() # сохраняем изменения
-        
+
     except DisciplineNotFoundException as ex:
         session.rollback()
         raise ex

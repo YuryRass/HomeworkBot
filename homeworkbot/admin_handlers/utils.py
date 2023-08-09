@@ -1,5 +1,8 @@
+"""
+    Модуль реализует функции по созданию и отправке
+    различных сообщений в Tg чате.
+"""
 from aiogram.types import (
-    InlineKeyboardMarkup,
     InlineKeyboardButton,
     Message,
     CallbackQuery
@@ -7,14 +10,18 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.main_db import admin_crud
+from model.main_db.student import Student
 from homeworkbot import bot
 
 
 async def create_teachers_button(message: Message, callback_prefix: str):
     """
         Создает инлаин клавиатуру с ФИО преподов.
+
         Параметры:
+
         message (Message): сообщение telegram пользователя.
+
         callback_prefix (str): префикс для значения callback_data.
     """
     teachers = admin_crud.get_teachers()
@@ -47,8 +54,70 @@ async def start_upload_file_message(message: Message) -> Message:
 async def finish_upload_file_message(message: Message,
                                      text: str = '<i>Файл загружен!</i>') -> None:
 
-    """
-        Завершение загрузки файла.
-    """
+    """Завершение загрузки файла"""
 
     await message.edit_text(text=text)
+
+
+async def create_groups_button(message: Message, callback_prefix: str) -> None:
+    """Создание и отображение клавиш с учебными группами.
+
+    Args:
+        message (Message): Tg сообщение.
+
+        callback_prefix (str): начало названия коллбэка.
+    """
+    groups = admin_crud.get_all_groups()
+    if len(groups) < 1:
+        await message.answer(text="В БД отсутствуют группы!")
+        return
+    groups_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    groups_kb.row(
+        *[InlineKeyboardButton(
+            text=it.group_name,
+            callback_data=f'{callback_prefix}_{it.id}'
+        ) for it in groups],
+        width=1
+    )
+    await message.answer(
+        text="Выберете группу в которой учится студент:",
+        reply_markup=groups_kb.as_markup()
+    )
+
+
+async def create_callback_students_button(
+        call: CallbackQuery,
+        students: list[Student],
+        callback_prefix: str, id_flag: bool = False) -> None:
+    """Создание инлаин-кнопок с коллбэками с ФИО студентов.
+
+    Args:
+        call (CallbackQuery): коллбэк.
+
+        students (list[Student]): список студентов.
+
+        callback_prefix (str): начало названия коллбэка.
+
+        id_flag (bool, optional): флаг для инициализации callback-a,
+        если False, то используем telegram_id студента,
+        в противном случае - id студента в таблице Student. Defaults to False.
+    """
+    if len(students) < 1:
+        await call.answer(text="В группе нет студентов")
+        return
+
+    # Создание инлаин-кнопок
+    students_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    students_kb.row(
+        *[InlineKeyboardButton(
+            text=it.full_name,
+            callback_data=f'{callback_prefix}_{it.telegram_id if not id_flag else it.id}'
+        ) for it in students],
+        width=1
+    )
+
+    # отображение клавиатуры с инлаин-кнопками - ФИО студентов
+    await call.message.edit_text(
+        text="Выберите студента:",
+        reply_markup=students_kb.as_markup(),
+    )

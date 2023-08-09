@@ -13,6 +13,8 @@ from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot.admin_handlers.add_discipline import _handle_add_discipline
 from homeworkbot.admin_handlers.add_students_group import _handle_add_students_group
+from homeworkbot.admin_handlers.utils import create_groups_button
+from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
 
 from homeworkbot import bot
 router: Router = Router()
@@ -223,9 +225,9 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.ADD_DISCIPLINE:
             await _handle_add_discipline(message, state)
         case AdminCommand.BAN_STUDENT:
-            ...
+            await create_groups_button(message, 'groupBan')
         case AdminCommand.UNBAN_STUDENT:
-            ...
+            await create_unban_student_buttons(message)
         case AdminCommand.NEXT:
             # если Tg ID пользователя нет в списке __menu_index,
             # то устанавливаем для пользователя вторую клавиатуру

@@ -74,9 +74,9 @@ async def handle_upload_students_group(message: Message, state: FSMContext):
             await state.clear()
 
         except DisciplineNotFoundException as dnf_ex:
-            await message.answer(text=dnf_ex)
+            await result_message.edit_text(text=str(dnf_ex))
 
         except GroupAlreadyExistException as gae_ex:
-            await message.answer(text=gae_ex)
+            await result_message.edit_text(text=str(gae_ex))
     else:
-        await message.answer(text="Неверный тип файла")
+        await result_message.edit_text(text="Неверный тип файла")
