@@ -12,5 +12,5 @@ class TeacherDiscipline(Base):
     teacher_id = Column(Integer, ForeignKey('teachers.id'), nullable=False)
 
     def __repr__(self) -> str:
-        return f'Discipline [grID: {self.discipline_id}, ' + \
+        return f'TeacherDiscipline [dID: {self.discipline_id}, ' + \
             f'tID: {self.teacher_id}]'

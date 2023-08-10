@@ -11,6 +11,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.main_db import admin_crud
 from model.main_db.student import Student
+from model.main_db.discipline import Discipline
 from homeworkbot import bot
 
 
@@ -120,4 +121,40 @@ async def create_callback_students_button(
     await call.message.edit_text(
         text="Выберите студента:",
         reply_markup=students_kb.as_markup(),
+    )
+
+async def create_callback_disciplines_button(
+        call: CallbackQuery,
+        disciplines: list[Discipline],
+        teacher_id: int,
+        callback_prefix: str,) -> None:
+    """Создание инлаин-кнопок с коллбэками с названиями дисциплин.
+
+    Args:
+        call (CallbackQuery): коллбэк.
+
+        disciplines (list[Discipline]): список преподов.
+
+        teacher_id (int): Tg ID препода.
+
+        callback_prefix (str): начало названия коллбэка.
+    """
+    if len(disciplines) < 1:
+        await call.answer(text="В БД отсутствуют данные по дисциплинам!!")
+        return
+
+    # Создание инлаин-кнопок
+    disciplines_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    disciplines_kb.row(
+        *[InlineKeyboardButton(
+            text=it.short_name,
+            callback_data=f'{callback_prefix}_{teacher_id}_{it.id}'
+        ) for it in disciplines],
+        width=1
+    )
+
+    # отображение клавиатуры с инлаин-кнопками
+    await call.message.edit_text(
+        text="Выберите дисциплину:",
+        reply_markup=disciplines_kb.as_markup(),
     )

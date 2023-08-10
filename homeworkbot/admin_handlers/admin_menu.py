@@ -14,7 +14,9 @@ from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot.admin_handlers.add_discipline import _handle_add_discipline
 from homeworkbot.admin_handlers.add_students_group import _handle_add_students_group
 from homeworkbot.admin_handlers.utils import create_groups_button
+from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
+
 
 from homeworkbot import bot
 router: Router = Router()
@@ -260,7 +262,7 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.SET_TEACHER_TO_GROUP:
             await create_teachers_button(message, 'assignTeacherGR')
         case AdminCommand.SET_TEACHER_TO_DISCIPLINE:
-            ...
+            await create_teachers_button(message, 'assignTeacherDis')
         case AdminCommand.DELETE_GROUP:
             ...
         case AdminCommand.DELETE_STUDENT:

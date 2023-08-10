@@ -3,6 +3,7 @@
     основной базы данных.
 """
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import exists, and_
 
 from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
@@ -16,6 +17,7 @@ from model.main_db.teacher import Teacher
 from model.main_db.group import Group
 from model.main_db.teacher_group import TeacherGroup
 from model.main_db.assigned_discipline import AssignedDiscipline
+from model.main_db.teacher_discipline import TeacherDiscipline
 from model.main_db.discipline import Discipline
 from model.main_db.student import Student
 from utils.disciplines_utils import disciplines_works_from_json
@@ -255,3 +257,39 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
         raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
     finally:
         session.close()
+
+
+def assign_teacher_to_discipline(teacher_id: int, discipline_id: int) -> None:
+    """Функция назначает преподу дисицплину.
+
+    Args:
+        teacher_id (int): ID препода.
+
+        discipline_id (int): ID дисциплины.
+    """
+
+    with Session() as session:
+        session.add(TeacherDiscipline(teacher_id=teacher_id, discipline_id=discipline_id))
+        session.commit()
+
+def get_not_assign_teacher_disciplines(teacher_id: int) -> list[Discipline]:
+    """Получить список учебных дисциплин, не назначенных преподу.
+
+    Args:
+        teacher_id (int): ID препода.
+
+    Returns:
+        list[Discipline]: список дисциплин.
+    """
+
+    # Используем соединение LEFT JOIN
+    with Session() as session:
+        not_assign_teacher_disciplines = session.query(
+            Discipline
+        ).outerjoin(
+            TeacherDiscipline
+        ).filter(
+            TeacherDiscipline.discipline_id.is_(None)
+        ).all()
+
+        return not_assign_teacher_disciplines
