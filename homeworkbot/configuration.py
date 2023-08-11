@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+
 from homeworkbot.middlewares import BanMiddleware
 
 load_dotenv() # загрузка токена Tg бота
