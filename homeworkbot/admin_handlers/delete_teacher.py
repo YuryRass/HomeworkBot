@@ -1,25 +1,24 @@
-from aiogram import Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 
 from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
-from homeworkbot.configuration import bot
+from homeworkbot.routers import admin_router
+
 from database.main_db import admin_crud
 
-router: Router = Router()
 
-@router.message(IsOnlyAdmin(), Command(commands=['delteacher']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['delteacher']))
 async def handle_delete_teacher(message: Message):
     await create_teachers_button(message, 'delTeacher')
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['delteacher']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['delteacher']))
 async def handle_no_delete_teacher(message: Message):
-    await bot.send_message(message.chat.id, "Нет прав доступа!!!")
+    await message.answer(text="Нет прав доступа!!!")
 
 
-@router.callback_query(lambda call: 'delTeacher_' in call.data)
+@admin_router.callback_query(lambda call: 'delTeacher_' in call.data)
 async def callback_delete_teacher(call: CallbackQuery):
     """Удаление препода из основной БД.
 

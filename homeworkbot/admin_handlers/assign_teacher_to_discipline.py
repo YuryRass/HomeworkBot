@@ -2,23 +2,22 @@
     Модуль реализует назначение преподавателю дисицплины
 """
 
-from aiogram import Router
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command, StateFilter
-from aiogram.fsm.state import State
-from aiogram.fsm.context import FSMContext
+from aiogram.filters import Command
 
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
+from homeworkbot.routers import admin_router
+
 from homeworkbot.admin_handlers.utils import create_teachers_button, \
     create_callback_disciplines_button
+
 from database.main_db.admin_crud import get_not_assign_teacher_disciplines, \
     assign_teacher_to_discipline
+
 from model.main_db.discipline import Discipline
 
-router: Router = Router()
 
-
-@router.message(IsOnlyAdmin(), Command(commands=['assigntd']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['assigntd']))
 async def _assign_teacher_to_discipline_handler(message: Message):
     """Обработчик на назначение дисицплины преподу.
 
@@ -29,7 +28,7 @@ async def _assign_teacher_to_discipline_handler(message: Message):
     await create_teachers_button(message, 'assignTeacherDis')
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['assigntd']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['assigntd']))
 async def _not_assign_teacher_to_discipline_handler(message: Message):
     """Обработчик на невозможность назначения дисицплины преподу.
 
@@ -40,7 +39,7 @@ async def _not_assign_teacher_to_discipline_handler(message: Message):
     await message.answer(text='У вас нет прав доступа!!!')
 
 
-@router.callback_query(lambda call: 'assignTeacherDis_' in call.data
+@admin_router.callback_query(lambda call: 'assignTeacherDis_' in call.data
                        or 'assignDiscT_' in call.data)
 async def process_assign_teacher_to_discipline(call: CallbackQuery) -> None:
     callback_type: str = call.data.split('_')[0]

@@ -1,31 +1,34 @@
 import json
 
-from aiogram import F, Router
+from aiogram import F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 
-from database.main_db.crud_exceptions import DisciplineNotFoundException, GroupAlreadyExistException
-from homeworkbot.admin_handlers.utils import start_upload_file_message, finish_upload_file_message
+from database.main_db import admin_crud
+from database.main_db.crud_exceptions import DisciplineNotFoundException, \
+    GroupAlreadyExistException
+
 from homeworkbot.filters import IsNotOnlyAdmin, IsOnlyAdmin
 from homeworkbot.configuration import bot
-from database.main_db import admin_crud
-from model.pydantic.students_group import StudentsGroup
+from homeworkbot.routers import admin_router
+from homeworkbot.admin_handlers.utils import start_upload_file_message, \
+    finish_upload_file_message
 
-router: Router = Router()
+from model.pydantic.students_group import StudentsGroup
 
 
 class AdminStates(StatesGroup):
     upload_students_group = State()
 
 
-@router.message(IsOnlyAdmin(), Command(commands=['addstudentsgroup']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['addstudentsgroup']))
 async def handle_add_students_group(message: Message):
     await _handle_add_students_group(message)
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['addstudentsgroup']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addstudentsgroup']))
 async def handle_no_add_students_group(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 
@@ -38,7 +41,7 @@ async def _handle_add_students_group(message: Message, state: FSMContext):
     )
 
 
-@router.message(StateFilter(AdminStates.upload_students_group),
+@admin_router.message(StateFilter(AdminStates.upload_students_group),
                      F.content_type == ContentType.DOCUMENT)
 async def handle_upload_students_group(message: Message, state: FSMContext):
     """

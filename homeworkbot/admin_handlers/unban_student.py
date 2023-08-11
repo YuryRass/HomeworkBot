@@ -1,23 +1,20 @@
-from aiogram import Router
 from aiogram.types import InlineKeyboardButton, Message, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
 
 from database.main_db import common_crud
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
-from homeworkbot.configuration import bot
-
-router: Router = Router()
+from homeworkbot.routers import admin_router
 
 
-@router.message(IsOnlyAdmin(), Command(commands=['unban']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['unban']))
 async def handle_unban_student(message: Message):
     await create_unban_student_buttons(message)
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['unban']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['unban']))
 async def handle_no_unban_student(message: Message):
-    await bot.send_message(message.chat.id, "Нет прав доступа!!!")
+    await message.answer(text="Нет прав доступа!!!")
 
 
 async def create_unban_student_buttons(message: Message):
@@ -28,7 +25,7 @@ async def create_unban_student_buttons(message: Message):
     """
     students = common_crud.get_ban_students(message.from_user.id)
     if len(students) < 1:
-        await bot.send_message(message.chat.id, "Нет забаненных студентов!")
+        await message.answer(text="Нет забаненных студентов!")
         return
     students_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
     students_kb.row(
@@ -44,7 +41,7 @@ async def create_unban_student_buttons(message: Message):
     )
 
 
-@router.callback_query(lambda call: 'studentUnBan_' in call.data)
+@admin_router.callback_query(lambda call: 'studentUnBan_' in call.data)
 async def callback_unban_student(call: CallbackQuery):
     """Обработчик коллбэка для разбанивания студента.
 

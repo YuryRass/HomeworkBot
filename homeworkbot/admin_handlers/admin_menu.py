@@ -1,25 +1,27 @@
 from enum import Enum, auto
 
-from aiogram import Router
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 
 from database.main_db import admin_crud
+
 from homeworkbot.filters import IsOnlyAdminCommands
+from homeworkbot.routers import admin_router
+
+# для инициализиации роутера админа
+from homeworkbot.admin_handlers import *
+
 from homeworkbot.admin_handlers.add_chat import _handle_add_chat
 from homeworkbot.admin_handlers.add_teacher import _handle_add_teacher
-from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot.admin_handlers.add_discipline import _handle_add_discipline
 from homeworkbot.admin_handlers.add_students_group import _handle_add_students_group
+
+from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.utils import create_groups_button
 from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
-
-
-from homeworkbot import bot
-router: Router = Router()
 
 
 class AdminException(Exception):
@@ -206,7 +208,7 @@ __menu_list = [
 ]
 
 
-@router.message(IsOnlyAdminCommands(__admin_commands))
+@admin_router.message(IsOnlyAdminCommands(__admin_commands))
 async def handle_commands(message: Message, state: FSMContext):
     """
         Обработчик команд администратора.

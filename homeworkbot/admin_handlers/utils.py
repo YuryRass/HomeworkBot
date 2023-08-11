@@ -12,7 +12,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from database.main_db import admin_crud
 from model.main_db.student import Student
 from model.main_db.discipline import Discipline
-from homeworkbot import bot
 
 
 async def create_teachers_button(message: Message, callback_prefix: str):

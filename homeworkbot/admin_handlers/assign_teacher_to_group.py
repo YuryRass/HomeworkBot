@@ -1,21 +1,19 @@
-from aiogram import Router
 from aiogram.types import (
-    InlineKeyboardMarkup,
     InlineKeyboardButton,
     Message,
     CallbackQuery
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
+
 from homeworkbot.admin_handlers.utils import create_teachers_button
-from homeworkbot.configuration import bot
-from database.main_db import admin_crud
 from homeworkbot.filters import IsNotOnlyAdmin, IsOnlyAdmin
+from homeworkbot.routers import admin_router
 
-router: Router = Router()
+from database.main_db import admin_crud
 
 
-@router.message(IsOnlyAdmin(), Command(commands=['assigntgr']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['assigntgr']))
 async def handle_assign_teacher_to_group(message: Message):
     """
         Обработчик создания преподских инлаин-кнопок.
@@ -23,15 +21,17 @@ async def handle_assign_teacher_to_group(message: Message):
     await create_teachers_button(message, 'assignTeacherGR')
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['assigntgr']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['assigntgr']))
 async def handle_no_assign_teacher_to_group(message: Message):
     """
         Обработчик невозможности создания преподских инлаин-кнопок.
     """
-    await bot.send_message(message.chat.id, "Нет прав доступа!!!")
+    await message.answer(text="Нет прав доступа!!!")
 
 
-@router.callback_query(lambda call: 'assignTeacherGR_' in call.data or 'assignGroupT_' in call.data)
+@admin_router.callback_query(
+    lambda call: 'assignTeacherGR_' in call.data or 'assignGroupT_' in call.data
+)
 async def callback_assign_teacher_to_group(call: CallbackQuery):
     """
         Обработчик назначения преподу учебной группы.

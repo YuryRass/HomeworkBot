@@ -1,4 +1,9 @@
-__all__ = ['admin_menu', 'admin_keyboard']
+__all__ = [
+    'add_chat', 'add_teacher', 'assign_teacher_to_group',
+    'add_student', 'add_discipline', 'add_students_group',
+    'ban_student', 'unban_student', 'assign_teacher_to_discipline',
+    'delete_group', 'delete_teacher', 'delete_student'
+]
 
 
 import homeworkbot.admin_handlers.admin_menu as admin_menu

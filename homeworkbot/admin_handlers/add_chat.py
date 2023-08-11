@@ -2,17 +2,18 @@
     Модуль add_chat.py реализует добавление ID telegram чата
     в таблицу Chat.
 """
-from aiogram import Router
+
 from aiogram.types import Message
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.state import default_state
-from homeworkbot.configuration import bot
+
 from database.main_db import admin_crud
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 
-router: Router = Router()
+from homeworkbot.routers import admin_router
+
 
 class AdminStates(StatesGroup):
     """
@@ -23,14 +24,14 @@ class AdminStates(StatesGroup):
     chat_id = State()
 
 
-@router.message(IsOnlyAdmin(), Command(commands=['addchat']),
+@admin_router.message(IsOnlyAdmin(), Command(commands=['addchat']),
                 StateFilter(default_state))
 async def handle_add_chat(message: Message, state: FSMContext):
     """Обработчик добавления ID чата в таблицу"""
     await _handle_add_chat(message, state)
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['addchat']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addchat']))
 async def handle_no_add_chat(message: Message):
     """Обработчик невозможности добавления ID чата в таблицу"""
     await message.answer("Нет прав доступа!!!")
@@ -42,7 +43,7 @@ async def _handle_add_chat(message: Message, state: FSMContext) -> None:
     await message.answer(text="Введите telegram id добавляемого группового чата:")
 
 
-@router.message(StateFilter(AdminStates.chat_id))
+@admin_router.message(StateFilter(AdminStates.chat_id))
 async def chat_correct(message: Message, state: FSMContext):
     """
         Добавление корректного ID чата в таблицу.

@@ -1,26 +1,27 @@
-from aiogram import Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 
 from database.main_db import common_crud
+
 from homeworkbot.admin_handlers.utils import \
     create_groups_button, create_callback_students_button
+
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
-from homeworkbot.configuration import bot
+from homeworkbot.routers import admin_router
 
-router: Router = Router()
-
-@router.message(IsOnlyAdmin(), Command(commands=['ban']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['ban']))
 async def handle_ban_student(message: Message):
     await create_groups_button(message, 'groupBan')
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['ban']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['ban']))
 async def handle_no_ban_student(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 
 
-@router.callback_query(lambda call: 'studentBan_' in call.data or 'groupBan_' in call.data)
+@admin_router.callback_query(
+    lambda call: 'studentBan_' in call.data or 'groupBan_' in call.data
+)
 async def callback_ban_student(call: CallbackQuery):
     """Обработчик коллбэка по забаниванию студента.
 

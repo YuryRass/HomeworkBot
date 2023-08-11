@@ -5,7 +5,7 @@
 """
 from pathlib import Path
 
-from aiogram import F, Router
+from aiogram import F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ContentType
@@ -13,11 +13,11 @@ from aiogram.filters import Command, StateFilter
 
 from homeworkbot.admin_handlers.utils import start_upload_file_message, finish_upload_file_message
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
+from homeworkbot.routers import admin_router
 from homeworkbot.configuration import bot
+
 from database.main_db import admin_crud
 from utils.disciplines_utils import disciplines_works_from_json
-
-router: Router = Router()
 
 
 class AdminStates(StatesGroup):
@@ -25,13 +25,13 @@ class AdminStates(StatesGroup):
     upload_discipline = State()
 
 
-@router.message(IsOnlyAdmin(), Command(commands=['adddiscipline']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['adddiscipline']))
 async def handle_add_discipline(message: Message):
     """Обработчик возможности добавления дисциплины."""
     await _handle_add_discipline(message)
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['adddiscipline']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['adddiscipline']))
 async def handle_no_add_discipline(message: Message):
     """
         Обработчик невозможности добавления дисциплины.
@@ -47,7 +47,7 @@ async def _handle_add_discipline(message: Message, state: FSMContext):
     await state.set_state(state=AdminStates.upload_discipline)
 
 
-@router.message(StateFilter(AdminStates.upload_discipline),
+@admin_router.message(StateFilter(AdminStates.upload_discipline),
                 F.content_type == ContentType.DOCUMENT)
 async def handle_upload_discipline(message: Message, state: FSMContext):
     """

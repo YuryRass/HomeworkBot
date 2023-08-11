@@ -3,31 +3,29 @@
     о преподе в таблицу Teacher.
 """
 import re
-from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.state import default_state
-from homeworkbot.configuration import bot
+from aiogram.fsm.state import State, StatesGroup, default_state
+
 from database.main_db import admin_crud
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
+from homeworkbot.routers import admin_router
 
-router: Router = Router()
 
 class AdminStates(StatesGroup):
     """Состояния администратора"""
     teacher_name = State()
     teacher_tg_id = State()
 
-@router.message(IsOnlyAdmin(), Command(commands=['addteacher']),
+@admin_router.message(IsOnlyAdmin(), Command(commands=['addteacher']),
                 StateFilter(default_state))
 async def handle_add_teacher(message: Message, state: FSMContext):
     """Обработчик добавления препода в таблицу"""
     await _handle_add_teacher(message, state)
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['addchat']),
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addchat']),
                 StateFilter(default_state))
 async def handle_no_add_chat(message: Message):
     """Обработчик невозможности добавления препода в таблицу"""
@@ -40,7 +38,7 @@ async def _handle_add_teacher(message: Message, state: FSMContext) -> None:
     await message.answer(text="Введите ФИО преподавателя (Например, Иванов Иван Иванович):")
 
 
-@router.message(StateFilter(AdminStates.teacher_name))
+@admin_router.message(StateFilter(AdminStates.teacher_name))
 async def teacher_name_correct(message: Message, state: FSMContext):
     """
         Проверка на ввод ФИО и в случае успеха - установка
@@ -56,7 +54,7 @@ async def teacher_name_correct(message: Message, state: FSMContext):
         await message.answer(text="Пожалуйста, проверьте корректность ввода ФИО!")
 
 
-@router.message(StateFilter(AdminStates.teacher_tg_id))
+@admin_router.message(StateFilter(AdminStates.teacher_tg_id))
 async def teacher_id_correct(message: Message, state: FSMContext):
     """
         Проверка на ввод ID и в случае успеха -

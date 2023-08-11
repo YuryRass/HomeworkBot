@@ -5,21 +5,20 @@
 import re
 from enum import IntEnum
 
-from aiogram import Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+
 from pydantic import BaseModel
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, \
-    Message, CallbackQuery
+from aiogram.types import (
+    InlineKeyboardButton, Message, CallbackQuery
+)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from homeworkbot.configuration import bot
 from database.main_db import admin_crud, common_crud
 from homeworkbot.filters import AddStudentCallbackFactory, IsOnlyAdmin, IsNotOnlyAdmin
+from homeworkbot.routers import admin_router
 
-
-router: Router = Router()
 
 class AddStudentStep(IntEnum):
     SAVE = 1 # добавление студента в БД
@@ -46,7 +45,7 @@ class AdminStates(StatesGroup):
     student_name = State()
 
 
-@router.message(IsOnlyAdmin(), Command(commands=['addstudent']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['addstudent']))
 async def handle_add_student(message: Message):
     """
         Обработчик установки состояния админа на добавления студента.
@@ -54,7 +53,7 @@ async def handle_add_student(message: Message):
     await _handle_add_student(message)
 
 
-@router.message(IsNotOnlyAdmin(), Command(commands=['addstudent']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addstudent']))
 async def handle_no_add_student(message: Message):
     """
         Обработчик невозможности установки состояния
@@ -73,7 +72,7 @@ async def _handle_add_student(message: Message, state: FSMContext):
     await message.answer(text="Введите ФИО студента:")
 
 
-@router.message(StateFilter(AdminStates.student_name))
+@admin_router.message(StateFilter(AdminStates.student_name))
 async def student_name_correct(message: Message, state: FSMContext):
     """
         Обработчик проверки ФИО студента и вывода списка учебных групп.
@@ -119,7 +118,7 @@ async def student_name_correct(message: Message, state: FSMContext):
         await message.answer(text="Пожалуйста, проверьте корректность ввода ФИО!")
 
 
-@router.callback_query(AddStudentCallbackFactory.filter())
+@admin_router.callback_query(AddStudentCallbackFactory.filter())
 async def callback_add_student(call: CallbackQuery, state: FSMContext):
     """
         Обработчик добавления студента и назначения ему дисциплин.
