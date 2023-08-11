@@ -1,6 +1,6 @@
 """
-    Модуль admin_crud.py выполняет CRUD-операции с таблицами
-    основной базы данных.
+    Модуль admin_crud.py реализует для администратора
+    CRUD-операции, работающие с таблицами основной БД.
 """
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import exists, and_
@@ -293,3 +293,89 @@ def get_not_assign_teacher_disciplines(teacher_id: int) -> list[Discipline]:
         ).all()
 
         return not_assign_teacher_disciplines
+
+def delete_group(group_id: int) -> None:
+    """Осуществялет удаление учебной группы по её ID из основной БД.
+
+    Args:
+        group_id (int): ID группы.
+    """
+    with Session() as session:
+        # удаление группы из таблицы Group
+        session.query(Group).filter(
+            Group.id == group_id
+        ).delete(synchronize_session='fetch')
+
+        # удаление строк с заданным значением group_id
+        # в таблице TeacherGroup
+        session.query(TeacherGroup).filter(
+            TeacherGroup.group_id == group_id
+        ).delete(synchronize_session='fetch')
+
+        # список студентов, обучающихся в данной группе
+        students = session.query(Student).filter(Student.group == group_id).all()
+
+        # если список студентов пуст, то завершение
+        if not students:
+            session.commit()
+            return
+
+        # если имеются студенты, обучающиеся в группе с ID = group_id,
+        # то удаляем сперва все записи из дочерней таблицы AssignedDiscipline
+        # (Student - родительская таблица), где фигурируют идентификаторы
+        # данных студентов.
+
+        students_id = [it.id for it in students]
+        session.query(AssignedDiscipline).filter(
+            AssignedDiscipline.student_id.in_(students_id)
+        ).delete(synchronize_session='fetch')
+
+        # В конце удаляем полученных студентов с такими же ID
+        # из родительской таблицы Student
+        session.query(Student).filter(Student.group == group_id).delete(synchronize_session='fetch')
+
+        session.commit()
+
+
+def delete_student(student_id: int) -> None:
+    """Осуществялет удаление студента по его ID из основной БД.
+
+    Args:
+        student_id (int): ID студента.
+    """
+    with Session() as session:
+        # удаляем все записи из тех таблиц основной БД,
+        # где фигурируют записи с ID студента = student_id.
+        # Т.е. из таблиц Student и AssignedDiscipline.
+
+        session.query(Student).filter(Student.id == student_id).delete(synchronize_session='fetch')
+        session.query(AssignedDiscipline).filter(
+            AssignedDiscipline.student_id == student_id
+        ).delete(synchronize_session='fetch')
+        session.commit()
+
+
+def delete_teacher(teacher_id: int) -> None:
+    """Осуществялет удаление препода по его ID из основной БД.
+
+    Args:
+        teacher_id (int): ID препода.
+    """
+    with Session() as session:
+        # Удаление записи в таблице Teacher
+        session.query(Teacher).filter(
+            Teacher.id == teacher_id
+        ).delete(synchronize_session='fetch')
+
+        # Далее идет удаление всех записей из тех таблиц БД,
+        # где фигурируют записи с ID препода = teacher_id.
+        # Т.е. из таблиц TeacherGroup и TeacherDiscipline.
+        session.query(TeacherGroup).filter(
+            TeacherGroup.teacher_id == teacher_id
+        ).delete(synchronize_session='fetch')
+
+        session.query(TeacherDiscipline).filter(
+            TeacherDiscipline.teacher_id == teacher_id
+        ).delete(synchronize_session='fetch')
+
+        session.commit()

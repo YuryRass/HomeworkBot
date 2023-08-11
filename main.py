@@ -10,7 +10,8 @@ from homeworkbot.admin_handlers import (
     add_teacher, assign_teacher_to_group,
     add_student, add_discipline,
     add_students_group, ban_student,
-    unban_student, assign_teacher_to_discipline
+    unban_student, assign_teacher_to_discipline,
+    delete_group, delete_teacher, delete_student
 )
 
 
@@ -28,6 +29,9 @@ async def main():
     dispatcher.include_router(ban_student.router)
     dispatcher.include_router(unban_student.router)
     dispatcher.include_router(assign_teacher_to_discipline.router)
+    dispatcher.include_router(delete_student.router)
+    dispatcher.include_router(delete_teacher.router)
+    dispatcher.include_router(delete_group.router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=True)

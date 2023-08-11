@@ -264,11 +264,11 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.SET_TEACHER_TO_DISCIPLINE:
             await create_teachers_button(message, 'assignTeacherDis')
         case AdminCommand.DELETE_GROUP:
-            ...
+            await create_groups_button(message, 'groupDel')
         case AdminCommand.DELETE_STUDENT:
-            ...
+            await create_groups_button(message, 'groupStudDel')
         case AdminCommand.DELETE_TEACHER:
-            ...
+            await create_teachers_button(message, 'delTeacher')
         case AdminCommand.UPLOAD_TESTS:
             ...
         case AdminCommand.UPLOAD_CONFIGURATION:

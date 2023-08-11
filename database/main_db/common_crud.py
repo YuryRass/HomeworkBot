@@ -208,3 +208,18 @@ def get_students_from_group_for_ban(group_id: int) -> list[Student]:
     #         )
     #     ).all()
     #     return students
+
+
+def get_students_from_group(group_id) -> list[Student]:
+    """
+    Функция запроса списка студентов из конкретной группы
+
+    :param group_id: идентификатор группы
+
+    :return: список студентов
+    """
+    with Session() as session:
+        students = session.query(Student).filter(
+                Student.group == group_id
+        ).all()
+        return students
