@@ -18,6 +18,7 @@ from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot.admin_handlers.add_discipline import _handle_add_discipline
 from homeworkbot.admin_handlers.add_students_group import _handle_add_students_group
 from homeworkbot.admin_handlers.upload_tests import _handle_upload_tests
+from homeworkbot.admin_handlers.upload_start_configuration import _handle_upload_start_configuration
 
 from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.admin_handlers.utils import create_groups_button
@@ -275,7 +276,7 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.UPLOAD_TESTS:
             await _handle_upload_tests(message)
         case AdminCommand.UPLOAD_CONFIGURATION:
-            ...
+            await _handle_upload_start_configuration(message, state)
         case AdminCommand.SWITCH_TO_TEACHER:
             ...
         case AdminCommand.DOWNLOAD_FULL_REPORT:

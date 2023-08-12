@@ -3,7 +3,7 @@ __all__ = [
     'add_student', 'add_discipline', 'add_students_group',
     'ban_student', 'unban_student', 'assign_teacher_to_discipline',
     'delete_group', 'delete_teacher', 'delete_student', 'upload_tests',
-
+    'upload_start_configuration'
 ]
 
 
@@ -21,5 +21,6 @@ import homeworkbot.admin_handlers.delete_group as delete_group
 import homeworkbot.admin_handlers.delete_teacher as delete_teacher
 import homeworkbot.admin_handlers.delete_student as delete_student
 import homeworkbot.admin_handlers.upload_tests as upload_tests
+import homeworkbot.admin_handlers.upload_start_configuration as upload_start_configuration
 
 from homeworkbot.admin_handlers.admin_menu import first_admin_keyboard as admin_keyboard

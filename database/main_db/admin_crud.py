@@ -2,13 +2,15 @@
     Модуль admin_crud.py реализует для администратора
     CRUD-операции, работающие с таблицами основной БД.
 """
+import os
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import exists, and_
 
 from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
 from database.main_db.crud_exceptions import (
-    DisciplineNotFoundException, GroupAlreadyExistException
+    DisciplineNotFoundException, GroupAlreadyExistException,
+    DisciplineAlreadyExistException, GroupNotFoundException
 )
 
 from model.main_db.admin import Admin
@@ -20,10 +22,13 @@ from model.main_db.assigned_discipline import AssignedDiscipline
 from model.main_db.teacher_discipline import TeacherDiscipline
 from model.main_db.discipline import Discipline
 from model.main_db.student import Student
-from utils.disciplines_utils import disciplines_works_from_json
-from utils.homework_utils import create_homeworks, homeworks_to_json
+
 from model.pydantic.discipline_works import DisciplineWorksConfig
 from model.pydantic.students_group import StudentsGroup
+from model.pydantic.db_start_data import DbStartData
+
+from utils.disciplines_utils import disciplines_works_from_json
+from utils.homework_utils import create_homeworks, homeworks_to_json
 from utils.disciplines_utils import disciplines_works_from_json, \
     disciplines_works_to_json, counting_tasks
 
@@ -401,3 +406,155 @@ def get_discipline(discipline_id: int) -> Discipline:
     """
     with Session() as session:
         return session.query(Discipline).get(discipline_id)
+
+def remote_start_db_fill(data: DbStartData) -> None:
+    """
+    Функция для стартовой конфигурации системы через загрузку json-файла
+
+    :param data: данные по предметам, студентам, группам и преподавателям, а также
+    какие дисциплины кому назначены и какой преподаватель их ведет
+
+    :raises DisciplineNotFoundException: дисциплина не найдена
+    :raises DisciplineAlreadyExistException: дисциплина уже существует (дублируется)
+    :raises GroupAlreadyExistException: если группа с таким названием уже существует
+    :raises GroupNotFoundException: если группа с таким названием не найдена
+
+    :return: None
+    """
+    session = Session()
+    session.begin() # НАЧАЛО транзакции
+
+    # Tg ID админа по-умолчанию. Используется для сравнения
+    # с другим ID, который передается в стартовой конфигурации
+    admin_default_tg = int(os.getenv("DEFAULT_ADMIN"))
+    dis_short_names, groups_name = {}, {}
+
+    try:
+        # добавление дисципли
+        for discipline in data.disciplines:
+            # проверка на повтор имен дисциплин
+            if discipline.short_name in dis_short_names:
+                raise DisciplineAlreadyExistException(f"{discipline.short_name} дублируется")
+
+            # инициализируем дисциплину
+            dis = Discipline(
+                    full_name=discipline.full_name,
+                    short_name=discipline.short_name,
+                    path_to_test=discipline.path_to_test,
+                    path_to_answer=discipline.path_to_answer,
+                    works=disciplines_works_to_json(discipline),
+                    language=discipline.language,
+                    max_tasks=counting_tasks(discipline),
+                    max_home_works=len(discipline.works)
+                )
+
+            # добавляем ДИСЦИПЛИНУ в таблицу
+            session.add(dis)
+
+            # присваиваем ID дисциплинам
+            session.flush()
+
+            # добавляем имя дисицплины в словарь
+            dis_short_names[discipline.short_name] = dis.id
+
+        # добавление учебных групп
+        for it in data.groups:
+            group = Group(group_name=it.group_name)
+            session.add(group)
+            session.flush()
+            groups_name[it.group_name] = group.id
+
+            students = [
+                Student(
+                    full_name=student_raw,
+                    group=group.id)
+                for student_raw in it.students
+            ]
+            session.add_all(students)
+            session.flush()
+
+            # проверяем, чтобы учебные дисциплины, находящиеся
+            # в data.groups были и в таблице Discipline
+            for discipline in it.disciplines_short_name:
+                current_discipline = session.query(Discipline).filter(
+                    Discipline.short_name.ilike(f"%{discipline}%")
+                ).first()
+                if current_discipline is None:
+                    raise DisciplineNotFoundException(f'{discipline} нет в БД')
+
+                empty_homework = create_homeworks(
+                    disciplines_works_from_json(current_discipline.works)
+                )
+
+                # назначаем студентам дисциплины
+                session.add_all([
+                    AssignedDiscipline(
+                        student_id=student.id,
+                        discipline_id=current_discipline.id,
+                        home_work=homeworks_to_json(empty_homework)
+                    ) for student in students]
+                )
+
+        # добавляем преподов
+        for it in data.teachers:
+            teacher = Teacher(
+                full_name=it.full_name,
+                telegram_id=it.telegram_id
+            )
+            session.add(teacher)
+            session.flush()
+
+            # назначаем учебные группы преподам
+            for tgr in it.assign_groups:
+                if tgr not in groups_name:
+                    raise GroupNotFoundException(f'Группа {tgr} не найдена')
+                session.add(
+                    TeacherGroup(
+                        teacher_id=teacher.id,
+                        group_id=groups_name[tgr]
+                    )
+                )
+
+            # назначаем дисциплины преподам
+            for tdis in it.assign_disciplines:
+                if tdis not in dis_short_names:
+                    raise DisciplineNotFoundException(f'Дисциплина {tdis} не найдена')
+                session.add(
+                    TeacherDiscipline(
+                        teacher_id=teacher.id,
+                        discipline_id=dis_short_names[tdis]
+                    )
+                )
+
+            # если препод может быть админом и его ID != admin_default_tg,
+            # то добавляем преподский telegram_id в таблицу Admin
+            if it.is_admin and teacher.telegram_id != admin_default_tg:
+                session.add(
+                    Admin(
+                        telegram_id=teacher.telegram_id
+                    )
+                )
+
+        # Добавляем номера чатов
+        for chat in data.chats:
+            session.add(
+                Chat(chat_id=chat)
+            )
+
+        # сохраняем все изменения в БД
+        session.commit()
+        
+    except DisciplineNotFoundException as ex:
+        session.rollback()
+        raise ex
+    except DisciplineAlreadyExistException as daex:
+        session.rollback()
+        raise daex
+    except GroupNotFoundException as gnfex:
+        session.rollback()
+        raise gnfex
+    except IntegrityError as ex:
+        session.rollback()
+        raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
+    finally:
+        session.close()

@@ -1,0 +1,180 @@
+{
+    "chats": [
+        -946729235
+    ],
+    "groups": [
+      {
+        "group_name": "Z4831",
+        "disciplines_short_name": [
+          "ТМП",
+          "ТМП-2"
+        ],
+        "students": [
+          "Аксенов Иван Валерьевич",
+          "Беляев Иван Александрович",
+          "Боенко Василиса Александровна",
+          "Борисов Иван Андреевич",
+          "Буинов Иван Владимирович",
+          "Варданян Василиса Рачьяевна"
+        ]
+      },
+      {
+        "group_name": "Z4832",
+        "disciplines_short_name": [
+          "ТМП"
+        ],
+        "students": [
+          "Горохов Иван Сергеевич",
+          "Иванов Иван Валерьевич",
+          "Иванов Иван Николаевич",
+          "Карелина Василиса Владимировна"
+        ]
+      }
+    ],
+    "teachers": [
+      {
+        "full_name": "Рассказов Юрий Сергеевич",
+        "telegram_id": 591260097,
+        "assign_disciplines": [
+          "ТМП",
+          "ТМП-2"
+        ],
+        "assign_groups": [
+          "Z4832",
+          "Z4831"
+        ],
+        "is_admin": true
+      },
+      {
+        "full_name": "Чернышев Владислав Андреевич",
+        "telegram_id": 5834764208,
+        "assign_disciplines": [
+          "ТМП"
+        ],
+        "assign_groups": [
+          "Z4832"
+        ],
+        "is_admin": true
+      }
+    ],
+    "disciplines": [
+      {
+        "full_name": "Технологии и методы программирования",
+        "short_name": "ТМП",
+        "path_to_test": "_disciplines\\tmp\\test",
+        "path_to_answer": "_disciplines\\tmp\\answer",
+        "language": "python",
+        "works": [
+          {
+            "number": 1,
+            "amount_tasks": 11,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 2,
+            "amount_tasks": 20,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 3,
+            "amount_tasks": 19,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 4,
+            "amount_tasks": 18,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 5,
+            "amount_tasks": 16,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 6,
+            "amount_tasks": 15,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 7,
+            "amount_tasks": 20,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 8,
+            "amount_tasks": 18,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 9,
+            "amount_tasks": 22,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 10,
+            "amount_tasks": 10,
+            "deadline": "2022-02-01"
+          }
+        ]
+      },
+      {
+        "full_name": "Технологии и методы программирования",
+        "short_name": "ТМП-2",
+        "path_to_test": "_disciplines\\tmp2\\test",
+        "path_to_answer": "_disciplines\\tmp2\\answer",
+        "language": "python",
+        "works": [
+          {
+            "number": 1,
+            "amount_tasks": 11,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 2,
+            "amount_tasks": 20,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 3,
+            "amount_tasks": 19,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 4,
+            "amount_tasks": 18,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 5,
+            "amount_tasks": 16,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 6,
+            "amount_tasks": 15,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 7,
+            "amount_tasks": 20,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 8,
+            "amount_tasks": 18,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 9,
+            "amount_tasks": 22,
+            "deadline": "2022-02-01"
+          },
+          {
+            "number": 10,
+            "amount_tasks": 10,
+            "deadline": "2022-02-01"
+          }
+        ]
+      }
+    ]
+  }
