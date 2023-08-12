@@ -7,10 +7,7 @@ from aiogram.fsm.context import FSMContext
 from database.main_db import admin_crud
 
 from homeworkbot.filters import IsOnlyAdminCommands
-from homeworkbot.routers import admin_router
-
-# для инициализиации роутера админа
-from homeworkbot.admin_handlers import *
+from homeworkbot.routers import admin_menu_router
 
 from homeworkbot.admin_handlers.add_chat import _handle_add_chat
 from homeworkbot.admin_handlers.add_teacher import _handle_add_teacher
@@ -210,7 +207,7 @@ __menu_list = [
 ]
 
 
-@admin_router.message(IsOnlyAdminCommands(__admin_commands))
+@admin_menu_router.message(IsOnlyAdminCommands(__admin_commands))
 async def handle_commands(message: Message, state: FSMContext):
     """
         Обработчик команд администратора.
@@ -219,6 +216,11 @@ async def handle_commands(message: Message, state: FSMContext):
     # получаем ключ команды администратора, для которого потом
     # применяем конструкцию match
     command = get_current_admin_command(message.text)
+
+    # заранее очищаем все состояния админа, если они установлены
+    # с предыдущих команд
+    await state.clear()
+
     match command:
         case AdminCommand.ADD_CHAT:
             await _handle_add_chat(message, state)

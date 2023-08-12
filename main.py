@@ -4,7 +4,11 @@ from utils.init_app import init_app
 
 from homeworkbot import bot, dispatcher
 from homeworkbot.auth_handlers import router
-from homeworkbot.admin_handlers.admin_menu import admin_router
+
+# инициализиация роутеров админа
+from homeworkbot.admin_handlers import *
+
+from homeworkbot.routers import admin_menu_router, admin_router
 
 
 
@@ -12,7 +16,8 @@ async def main():
     # Регистриуем роутер для аутентификации Tg пользователя
     dispatcher.include_router(router)
 
-    # Регистрируем роутеры админа
+    # Регистрируем роутеры админа в диспетчере
+    dispatcher.include_router(admin_menu_router)
     dispatcher.include_router(admin_router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling

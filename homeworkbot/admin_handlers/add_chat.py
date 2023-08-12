@@ -54,6 +54,8 @@ async def chat_correct(message: Message, state: FSMContext):
     elif int(message.text) < 0:
         admin_crud.add_chat(int(message.text))
         await message.answer("Групповой чат успешно добавлен!")
-        await state.clear() # очистка состояний Админа
     else:
         await message.answer("ID чата должен быть отрицательным числом!")
+
+    # очистка состояний Админа
+    await state.clear()

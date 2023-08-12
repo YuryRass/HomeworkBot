@@ -43,7 +43,7 @@ async def _not_assign_teacher_to_discipline_handler(message: Message):
 
 
 @admin_router.callback_query(lambda call: 'assignTeacherDis_' in call.data
-                       or 'assignDiscT_' in call.data)
+                             or 'assignDiscT_' in call.data)
 async def process_assign_teacher_to_discipline(call: CallbackQuery) -> None:
     callback_type: str = call.data.split('_')[0]
     match callback_type:

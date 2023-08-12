@@ -81,7 +81,8 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
         await finish_upload_file_message(result_message,
                                          f'<i>Дисциплина {discipline.short_name} добавлена!</i>')
 
-        # очистка состояния админа
-        await state.clear()
     else:
         await message.answer(text="Неверный тип файла")
+
+    # очистка состояния админа
+    await state.clear()
