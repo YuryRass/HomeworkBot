@@ -379,3 +379,25 @@ def delete_teacher(teacher_id: int) -> None:
         ).delete(synchronize_session='fetch')
 
         session.commit()
+
+def get_all_disciplines() -> list[Discipline]:
+    """Возвращает список всех дисциплин, которые имеются в таблице.
+
+    Returns:
+        list[Discipline]: список дисциплин.
+    """
+    with Session() as session:
+        return session.query(Discipline).all()
+
+
+def get_discipline(discipline_id: int) -> Discipline:
+    """Возвращает дисциплину по ее ID.
+
+    Args:
+        discipline_id (int): ID дисциплины.
+
+    Returns:
+        Discipline: дисциплина.
+    """
+    with Session() as session:
+        return session.query(Discipline).get(discipline_id)
