@@ -4,7 +4,8 @@ from aiogram.types import (
     CallbackQuery
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.state import default_state
 
 from homeworkbot.admin_handlers.utils import create_teachers_button
 from homeworkbot.filters import IsNotOnlyAdmin, IsOnlyAdmin
@@ -13,7 +14,8 @@ from homeworkbot.routers import admin_router
 from database.main_db import admin_crud
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['assigntgr']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['assigntgr']),
+                      StateFilter(default_state))
 async def handle_assign_teacher_to_group(message: Message):
     """
         Обработчик создания преподских инлаин-кнопок.
@@ -21,7 +23,8 @@ async def handle_assign_teacher_to_group(message: Message):
     await create_teachers_button(message, 'assignTeacherGR')
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['assigntgr']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['assigntgr']),
+                      StateFilter(default_state))
 async def handle_no_assign_teacher_to_group(message: Message):
     """
         Обработчик невозможности создания преподских инлаин-кнопок.

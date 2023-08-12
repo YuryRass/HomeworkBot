@@ -1,5 +1,6 @@
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.state import default_state
 
 from database.main_db import admin_crud, common_crud
 
@@ -9,12 +10,14 @@ from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['delstudent']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['delstudent']),
+                      StateFilter(default_state))
 async def handle_delete_student(message: Message):
     await create_groups_button(message, 'groupStudDel')
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['delstudent']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['delstudent']),
+                      StateFilter(default_state))
 async def handle_no_delete_student(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 

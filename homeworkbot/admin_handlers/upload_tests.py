@@ -5,6 +5,7 @@
 
 from aiogram import F
 from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, Message, CallbackQuery, ContentType
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -22,12 +23,14 @@ class AdminState(StatesGroup):
     upload_test = State()
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['uptest']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['uptest']),
+                      StateFilter(default_state))
 async def handle_upload_tests(message: Message):
     await _handle_upload_tests(message)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['uptest']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['uptest']),
+                      StateFilter(default_state))
 async def handle_no_upload_tests(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 

@@ -3,7 +3,8 @@
 """
 
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.state import default_state
 
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router
@@ -17,7 +18,8 @@ from database.main_db.admin_crud import get_not_assign_teacher_disciplines, \
 from model.main_db.discipline import Discipline
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['assigntd']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['assigntd']),
+                      StateFilter(default_state))
 async def _assign_teacher_to_discipline_handler(message: Message):
     """Обработчик на назначение дисицплины преподу.
 
@@ -28,7 +30,8 @@ async def _assign_teacher_to_discipline_handler(message: Message):
     await create_teachers_button(message, 'assignTeacherDis')
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['assigntd']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['assigntd']),
+                      StateFilter(default_state))
 async def _not_assign_teacher_to_discipline_handler(message: Message):
     """Обработчик на невозможность назначения дисицплины преподу.
 

@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from aiogram import F
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
@@ -25,13 +25,15 @@ class AdminStates(StatesGroup):
     upload_discipline = State()
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['adddiscipline']))
-async def handle_add_discipline(message: Message):
+@admin_router.message(IsOnlyAdmin(), Command(commands=['adddiscipline']),
+                      StateFilter(default_state))
+async def handle_add_discipline(message: Message, state: FSMContext):
     """Обработчик возможности добавления дисциплины."""
-    await _handle_add_discipline(message)
+    await _handle_add_discipline(message, state)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['adddiscipline']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['adddiscipline']),
+                      StateFilter(default_state))
 async def handle_no_add_discipline(message: Message):
     """
         Обработчик невозможности добавления дисциплины.

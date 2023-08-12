@@ -1,18 +1,21 @@
 from aiogram.types import InlineKeyboardButton, Message, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.state import default_state
 
 from database.main_db import common_crud
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['unban']))
+@admin_router.message(IsOnlyAdmin(), Command(commands=['unban']),
+                      StateFilter(default_state))
 async def handle_unban_student(message: Message):
     await create_unban_student_buttons(message)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['unban']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['unban']),
+                      StateFilter(default_state))
 async def handle_no_unban_student(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 

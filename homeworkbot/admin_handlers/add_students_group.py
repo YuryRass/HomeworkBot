@@ -1,7 +1,7 @@
 import json
 
 from aiogram import F
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -23,12 +23,14 @@ class AdminStates(StatesGroup):
     upload_students_group = State()
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['addstudentsgroup']))
-async def handle_add_students_group(message: Message):
-    await _handle_add_students_group(message)
+@admin_router.message(IsOnlyAdmin(), Command(commands=['addstudentsgroup']),
+                      StateFilter(default_state))
+async def handle_add_students_group(message: Message, state: FSMContext):
+    await _handle_add_students_group(message, state)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addstudentsgroup']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addstudentsgroup']),
+                      StateFilter(default_state))
 async def handle_no_add_students_group(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 

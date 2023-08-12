@@ -6,7 +6,7 @@ import re
 from enum import IntEnum
 
 from aiogram.filters import Command, StateFilter
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.fsm.context import FSMContext
 
 from pydantic import BaseModel
@@ -45,15 +45,17 @@ class AdminStates(StatesGroup):
     student_name = State()
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['addstudent']))
-async def handle_add_student(message: Message):
+@admin_router.message(IsOnlyAdmin(), Command(commands=['addstudent']),
+                      StateFilter(default_state))
+async def handle_add_student(message: Message, state: FSMContext):
     """
         Обработчик установки состояния админа на добавления студента.
     """
-    await _handle_add_student(message)
+    await _handle_add_student(message, state)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addstudent']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addstudent']),
+                      StateFilter(default_state))
 async def handle_no_add_student(message: Message):
     """
         Обработчик невозможности установки состояния

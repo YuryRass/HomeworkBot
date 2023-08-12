@@ -6,6 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
+from aiogram.fsm.state import default_state
 
 from database.main_db import admin_crud
 from database.main_db.crud_exceptions import (
@@ -25,12 +26,14 @@ class AdminStates(StatesGroup):
     upload_config = State()
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['upconfig']))
-async def handle_upload_start_configuration(message: Message):
-    await _handle_upload_start_configuration(message)
+@admin_router.message(IsOnlyAdmin(), Command(commands=['upconfig']),
+                      StateFilter(default_state))
+async def handle_upload_start_configuration(message: Message, state: FSMContext):
+    await _handle_upload_start_configuration(message, state)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['upconfig']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['upconfig']),
+                      StateFilter(default_state))
 async def handle_no_upload_start_configuration(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 

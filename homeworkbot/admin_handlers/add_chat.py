@@ -25,13 +25,14 @@ class AdminStates(StatesGroup):
 
 
 @admin_router.message(IsOnlyAdmin(), Command(commands=['addchat']),
-                StateFilter(default_state))
+                      StateFilter(default_state))
 async def handle_add_chat(message: Message, state: FSMContext):
     """Обработчик добавления ID чата в таблицу"""
     await _handle_add_chat(message, state)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addchat']))
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addchat']),
+                      StateFilter(default_state))
 async def handle_no_add_chat(message: Message):
     """Обработчик невозможности добавления ID чата в таблицу"""
     await message.answer("Нет прав доступа!!!")
