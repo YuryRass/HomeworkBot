@@ -157,3 +157,27 @@ async def create_callback_disciplines_button(
         text="Выберите дисциплину:",
         reply_markup=disciplines_kb.as_markup(),
     )
+
+async def create_discipline_button(message: Message, callback_prefix: str):
+    """Создает и отображает в Tg-чате список со всеми учебными дисциплинами.
+
+    Args:
+        message (Message): Tg-сообщение.
+        callback_prefix (str): префикс callback-a.
+    """
+    disciplines = admin_crud.get_all_disciplines()
+    if len(disciplines) < 1:
+        await message.answer(text="В БД отсутствуют дисциплины!")
+        return
+    disciplines_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    disciplines_kb.row(
+        *[InlineKeyboardButton(
+            text=it.short_name,
+            callback_data=f'{callback_prefix}_{it.id}'
+        ) for it in disciplines],
+        width=1
+    )
+    await message.answer(
+        text="Выберете дисциплину:",
+        reply_markup=disciplines_kb.as_markup()
+    )
