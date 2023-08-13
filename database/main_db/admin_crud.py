@@ -90,8 +90,9 @@ def add_chat(chat_id: int) -> None:
     """
 
     with Session() as session:
-        session.add(Chat(chat_id=chat_id))
-        session.commit()
+        if not session.get(Chat, chat_id):
+            session.add(Chat(chat_id=chat_id))
+            session.commit()
 
 
 def add_teacher(full_name: str, tg_id: int) -> None:
@@ -543,7 +544,7 @@ def remote_start_db_fill(data: DbStartData) -> None:
 
         # сохраняем все изменения в БД
         session.commit()
-        
+
     except DisciplineNotFoundException as ex:
         session.rollback()
         raise ex
@@ -558,3 +559,17 @@ def remote_start_db_fill(data: DbStartData) -> None:
         raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
     finally:
         session.close()
+
+def switch_admin_mode_to_teacher(admin_id: int) -> None:
+    """Функция переключает с режима админа на режим препода.
+
+    Args:
+        admin_id (int): ID админа.
+    """
+    with Session() as session:
+        session.query(Admin).filter(
+            Admin.telegram_id == admin_id
+        ).update(
+            {'teacher_mode': True}
+        )
+        session.commit()

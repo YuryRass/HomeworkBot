@@ -3,6 +3,7 @@
 """
 from database.main_db.database import Session
 
+from model.main_db.admin import Admin
 from model.main_db.teacher import Teacher
 
 
@@ -67,3 +68,18 @@ def get_assign_group_discipline(teacher_tg_id: int, group_id: int) -> list[Disci
     #     teacher_disciplines = [it.discipline_id for it in teacher_disciplines]
     #     disciplines = [it for it in disciplines if it.id in teacher_disciplines]
     #     return disciplines
+
+
+def switch_teacher_mode_to_admin(teacher_tg_id: int) -> None:
+    """Функция переключает с режима препода на режим админа.
+
+    Args:
+        teacher_tg_id (int): ID препода.
+    """
+    with Session() as session:
+        session.query(Admin).filter(
+            Admin.telegram_id == teacher_tg_id
+        ).update(
+            {'teacher_mode': False}
+        )
+        session.commit()

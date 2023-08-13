@@ -1,3 +1,9 @@
+"""Модуль описывает главное меню админа.
+
+Raises:
+        AdminException: неизвестная команда админа
+"""
+
 from enum import Enum, auto
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, Message
@@ -6,7 +12,7 @@ from aiogram.fsm.context import FSMContext
 
 from database.main_db import admin_crud
 
-from homeworkbot.filters import IsOnlyAdminCommands
+from homeworkbot.filters import IsOnlyAdminCommands, IsAdmin
 from homeworkbot.routers import admin_menu_router
 
 from homeworkbot.admin_handlers.add_chat import _handle_add_chat
@@ -18,6 +24,7 @@ from homeworkbot.admin_handlers.upload_tests import _handle_upload_tests
 from homeworkbot.admin_handlers.upload_start_configuration import _handle_upload_start_configuration
 from homeworkbot.admin_handlers.download_all_test_and_answer import _handle_download_all_test_and_answer
 from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
+from homeworkbot.teacher_handlers import create_teacher_keyboard
 
 from homeworkbot.admin_handlers.utils import (
     create_teachers_button, create_groups_button,
@@ -282,7 +289,8 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.UPLOAD_CONFIGURATION:
             await _handle_upload_start_configuration(message, state)
         case AdminCommand.SWITCH_TO_TEACHER:
-            ...
+            admin_crud.switch_admin_mode_to_teacher(message.from_user.id)
+            await switch_admin_to_teacher_menu(message)
         case AdminCommand.DOWNLOAD_FULL_REPORT:
             await create_groups_button(message, 'fullReport')
         case AdminCommand.DOWNLOAD_ANSWER:
@@ -293,3 +301,16 @@ async def handle_commands(message: Message, state: FSMContext):
             await create_groups_button(message, 'shortReport')
         case AdminCommand.DOWNLOAD_ALL_ANSWER_WITH_TEST:
             await _handle_download_all_test_and_answer(message)
+
+async def switch_admin_to_teacher_menu(message: Message):
+    """Функция переключения в режим преподавателя
+    (отображает новую преподскую клавиатуру в Tg чате)
+
+    Args:
+        message (Message): Tg сообщение.
+    """
+    await message.answer(
+        text="Переключение в режим преподавателя",
+        disable_web_page_preview=True,
+        reply_markup=create_teacher_keyboard(message),
+    )

@@ -29,13 +29,27 @@ class IsTeacher(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         return teacher_crud.is_teacher(message.from_user.id)
 
+class IsNotTeacher(BaseFilter):
+    async def __call__(self, message: Message) -> bool:
+        return not teacher_crud.is_teacher(message.from_user.id)
+
 class IsOnlyAdminCommands(BaseFilter):
     def __init__(self, admin_commands: dict) -> None:
         self.admin_commands = admin_commands
     async def __call__(self, message: Message) -> bool:
         command: str = message.text
-        return  admin_crud.is_admin(message.from_user.id) and \
-            command in self.admin_commands.values()
+        return  admin_crud.is_admin_no_teacher_mode(message.from_user.id) \
+            and command in self.admin_commands.values()
+
+
+class IsOnlyTeacherCommands(BaseFilter):
+    def __init__(self, teacher_commands: dict) -> None:
+        self.teacher_commands = teacher_commands
+    async def __call__(self, message: Message) -> bool:
+        command: str = message.text
+        return  (teacher_crud.is_teacher(message.from_user.id) or \
+            admin_crud.is_admin_with_teacher_mode(message.from_user.id)) and \
+            command in self.teacher_commands.values()
 
 
 class AddStudentCallbackFactory(CallbackData,

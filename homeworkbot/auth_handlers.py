@@ -3,7 +3,7 @@
     пользователя в Telegram чате.
 """
 from aiogram import Router
-from aiogram.filters import Command, CommandStart, StateFilter
+from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import Message, InlineKeyboardMarkup, \
     InlineKeyboardButton, CallbackQuery
 from aiogram.exceptions import TelegramAPIError
@@ -12,6 +12,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from homeworkbot.configuration import bot
 from homeworkbot.admin_handlers import admin_keyboard
+from homeworkbot.teacher_handlers import create_teacher_keyboard
 
 import database.main_db.common_crud as common_crud
 import database.main_db.student_crud as student_crud
@@ -77,7 +78,7 @@ async def process_start_command(message: Message):
         case UserEnum.Teacher:
             await message.answer(
                 text='Приветствую! Надеюсь, что в этом году студенты вас не разочаруют!',
-                # TODO: клавиатура
+                reply_markup=create_teacher_keyboard(message)
             )
         case UserEnum.Student:
             await message.answer(
