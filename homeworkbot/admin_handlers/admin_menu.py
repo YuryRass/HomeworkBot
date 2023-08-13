@@ -284,12 +284,12 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.SWITCH_TO_TEACHER:
             ...
         case AdminCommand.DOWNLOAD_FULL_REPORT:
-            ...
+            await create_groups_button(message, 'fullReport')
         case AdminCommand.DOWNLOAD_ANSWER:
             await create_discipline_button(message, 'dowAnswersDis')
         case AdminCommand.DOWNLOAD_FINISH_REPORT:
-            ...
+            await create_groups_button(message, 'finishReport')
         case AdminCommand.DOWNLOAD_SHORT_REPORT:
-            ...
+            await create_groups_button(message, 'shortReport')
         case AdminCommand.DOWNLOAD_ALL_ANSWER_WITH_TEST:
             await _handle_download_all_test_and_answer(message)

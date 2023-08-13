@@ -223,3 +223,47 @@ def get_students_from_group(group_id) -> list[Student]:
                 Student.group == group_id
         ).all()
         return students
+
+def get_group(group_id: int) -> Group:
+    """Возвращает учебную группу по ее ID
+
+    Args:
+        group_id (int): ID группы.
+
+    Returns:
+        Group: учебная группа с ID = group_id.
+    """
+    with Session() as session:
+        return session.query(Group).get(group_id)
+
+
+def get_discipline(discipline_id: int) -> Discipline:
+    """Возвращает дисциплину по ее ID.
+
+    Args:
+        discipline_id (int): ID дисциплины.
+
+    Returns:
+        Discipline: дисциплина с ID = discipline_id.
+    """
+    with Session() as session:
+        return session.query(Discipline).get(discipline_id)
+
+
+def get_student_discipline_answer(student_id: int, discipline_id: int) -> AssignedDiscipline:
+    """Возвращает назначенную дисциплину для студента
+    с результатами по выполнению лабораторных работ.
+
+    Args:
+        student_id (int): ID студента.
+        discipline_id (int): ID дисциплины.
+
+    Returns:
+        AssignedDiscipline: назначенная дисциплина.
+    """
+    with Session() as session:
+        answers = session.query(AssignedDiscipline).filter(
+            AssignedDiscipline.student_id == student_id,
+            AssignedDiscipline.discipline_id == discipline_id
+        ).first()
+        return answers

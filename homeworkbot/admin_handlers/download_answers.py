@@ -1,18 +1,18 @@
 """
 Модуль обработки команды администратора на скачивание
-ответов по дисциплине конкретной группы
+ответов по дисциплине конкретной группы.
 """
-
 
 import asyncio
 from pathlib import Path
 
 from aiogram.types import (
-    Message, CallbackQuery, InputFile,
-    InlineKeyboardMarkup, InlineKeyboardButton
+    Message, CallbackQuery, InlineKeyboardButton
 )
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import default_state
+from aiogram.types.input_file import FSInputFile
 
 from database.main_db import admin_crud
 from homeworkbot.admin_handlers.utils import create_discipline_button
@@ -80,17 +80,17 @@ async def callback_download_answers(call: CallbackQuery):
             if not dirs:
                 await call.message.edit_text(text="Директории для скачивания ответов отсутствуют")
             else:
-                markup = InlineKeyboardMarkup()
-                markup.row_width = 1
-                markup.add(
+                groups_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
+                groups_kb.row(
                     *[InlineKeyboardButton(
-                        it.name,
+                        text=it.name,
                         callback_data=f'dowAnswersGr_{it.name}_{discipline_id}'
-                    ) for it in dirs]
+                    ) for it in dirs],
+                    width=1
                 )
                 await call.message.edit_text(
                     text="Выберите группу:",
-                    reply_markup=markup
+                    reply_markup=groups_kb.as_markup()
                 )
         # скачивание ответов для выбранной учебной группы
         case 'dowAnswersGr':
@@ -111,7 +111,7 @@ async def callback_download_answers(call: CallbackQuery):
 
 
 async def _download_answer(call: CallbackQuery, path_to_group_folder: Path):
-    """Ассинхронная функция скачивания ответов студентов.
+    """Ассинхронная функция скачивания и архивирования ответов студентов.
 
     Args:
         call (CallbackQuery): коллбэк.
@@ -131,5 +131,5 @@ async def _download_answer(call: CallbackQuery, path_to_group_folder: Path):
     # отправка в чат созданного архива
     await bot.send_document(
         call.message.chat.id,
-        InputFile(path_to_archive[0])
+        FSInputFile(path_to_archive[0])
     )
