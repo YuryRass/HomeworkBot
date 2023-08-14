@@ -24,6 +24,6 @@ def include_routers_in_dispatcher(dispatcher: Dispatcher) -> None:
 
     # Регистрируем роутеры админа и препода в диспетчере
     dispatcher.include_router(admin_menu_router)
-    dispatcher.include_router(admin_router)
     dispatcher.include_router(teacher_menu_router)
+    dispatcher.include_router(admin_router)
     dispatcher.include_router(common_router)

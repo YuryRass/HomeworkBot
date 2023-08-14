@@ -10,11 +10,11 @@ from database.main_db import admin_crud, teacher_crud, \
 
 class IsOnlyAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return admin_crud.is_admin_no_teacher_mode(message.from_user.id)
+        return admin_crud.is_admin(message.from_user.id)
 
 class IsNotOnlyAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return not admin_crud.is_admin_no_teacher_mode(message.from_user.id)
+        return not admin_crud.is_admin(message.from_user.id)
 
 class IsStudent(BaseFilter):
     async def __call__(self, message: Message) -> bool:
@@ -40,7 +40,7 @@ class IsOnlyTeacherCommands(BaseFilter):
         command: str = message.text
         is_only_teacher: bool = teacher_crud.is_teacher(message.from_user.id) or \
             admin_crud.is_admin_with_teacher_mode(message.from_user.id)
-            
+
         return  is_only_teacher and command in self.teacher_commands.values()
 
 
