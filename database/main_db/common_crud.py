@@ -267,3 +267,15 @@ def get_student_discipline_answer(student_id: int, discipline_id: int) -> Assign
             AssignedDiscipline.discipline_id == discipline_id
         ).first()
         return answers
+
+def get_student_from_id(student_id: int) -> Student:
+    """Функция вовзращает студента по его ID.
+
+    Args:
+        student_id (int): ID студента.
+
+    Returns:
+        Student: запись из таблицы Student.
+    """
+    with Session() as session:
+        return session.query(Student).get(student_id)

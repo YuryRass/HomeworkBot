@@ -6,13 +6,17 @@ Raises:
 from enum import Enum, auto
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, Message
+from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from database.main_db import teacher_crud
+from database.main_db.admin_crud import is_admin
+
 import homeworkbot.admin_handlers.admin_menu as admin_keyboard
+from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
 from homeworkbot.teacher_handlers.utils import \
     create_teacher_groups_button, create_teacher_discipline_button
-from database.main_db.admin_crud import is_admin
+
 
 from homeworkbot.routers import teacher_menu_router
 from homeworkbot.filters import IsOnlyTeacherCommands
@@ -85,12 +89,13 @@ def create_teacher_keyboard(message: Message | None = None) -> ReplyKeyboardMark
 
 
 @teacher_menu_router.message(IsOnlyTeacherCommands(__teacher_commands))
-async def handle_commands(message: Message):
+async def handle_commands(message: Message, state: FSMContext):
     """Обработчик команд препода.
 
     Args:
         message (Message): Tg-сообщение.
     """
+    await state.clear() # убираем предыдущие состояния.
 
     command = get_current_teacher_command(message.text)
 
@@ -104,11 +109,11 @@ async def handle_commands(message: Message):
         case TeacherCommand.DOWNLOAD_SHORT_REPORT:
             await create_teacher_groups_button(message, 'shortReport')
         case TeacherCommand.BAN_STUDENT:
-            ...
+            await create_teacher_groups_button(message, 'groupBan')
         case TeacherCommand.UNBAN_STUDENT:
-            ...
+            await create_unban_student_buttons(message)
         case TeacherCommand.INTERACTIVE_REPORT:
-            ...
+            await create_teacher_groups_button(message, 'interactiveGrRep')
         case TeacherCommand.DOWNLOAD_ANSWER:
             await create_teacher_discipline_button(message, 'dowTAnswersDis')
 

@@ -2,6 +2,8 @@
     Модуль teacher_crud.py выполняет CRUD-операции,
     необхимые преподаваетлю, с БД
 """
+from sqlalchemy import and_
+
 from database.main_db.database import Session
 
 from model.main_db.admin import Admin
@@ -129,3 +131,21 @@ def get_teacher_disciplines(teacher_tg_id: int) -> list[Discipline]:
             Teacher.telegram_id == teacher_tg_id
         ).all()
         return disciplines
+
+def get_auth_students(group_id: int) -> list[Student]:
+    """Функция возвращает список авторизованных студентов.
+
+    Args:
+        group_id (int): ID учебной группы.
+
+    Returns:
+        list[Student]: список авторизованных студентов.
+    """
+    with Session() as session:
+        students = session.query(Student).filter(
+            and_(
+                Student.group == group_id,
+                Student.telegram_id.is_not(None),
+            )
+        ).all()
+        return students
