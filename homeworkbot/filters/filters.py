@@ -38,9 +38,10 @@ class IsOnlyTeacherCommands(BaseFilter):
         self.teacher_commands = teacher_commands
     async def __call__(self, message: Message) -> bool:
         command: str = message.text
-        return  (teacher_crud.is_teacher(message.from_user.id) or \
-            admin_crud.is_admin_with_teacher_mode(message.from_user.id)) and \
-            command in self.teacher_commands.values()
+        is_only_teacher: bool = teacher_crud.is_teacher(message.from_user.id) or \
+            admin_crud.is_admin_with_teacher_mode(message.from_user.id)
+            
+        return  is_only_teacher and command in self.teacher_commands.values()
 
 
 class AddStudentCallbackFactory(CallbackData,

@@ -7,7 +7,6 @@ from aiogram.fsm.state import default_state
 
 from homeworkbot.admin_handlers.utils import create_groups_button
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
-from homeworkbot.configuration import bot
 from homeworkbot.routers import admin_router
 
 
