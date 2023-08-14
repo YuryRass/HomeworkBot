@@ -2,16 +2,22 @@
     Модуль auth_handlers.py осуществляет первичную авторизацию
     пользователя в Telegram чате.
 """
+
+import re
+
 from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import Message, InlineKeyboardMarkup, \
     InlineKeyboardButton, CallbackQuery
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
+
 from homeworkbot.configuration import bot
 from homeworkbot.admin_handlers import admin_keyboard
+from homeworkbot.student_handlers import student_keyboard
 from homeworkbot.teacher_handlers import create_teacher_keyboard
 
 import database.main_db.common_crud as common_crud
@@ -58,7 +64,7 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
 @auth_router.message(CommandStart())
 async def process_start_command(message: Message):
     """
-        Хэндлер, срабатывающий на команду '\start'
+        Хэндлер, срабатывающий на команду '/start'
     """
 
     # Происходит проверка какой группе принадлежит пользователь
@@ -83,7 +89,7 @@ async def process_start_command(message: Message):
         case UserEnum.Student:
             await message.answer(
                 text='С возвращением! О, юный падаван ;)',
-                # TODO: клавиатура
+                reply_markup=student_keyboard()
             )
         case _:
             chats = common_crud.get_chats()
@@ -95,10 +101,11 @@ async def process_start_command(message: Message):
 
             if user_in_chat:
                 # создаем инлаин-кнопки | Да | Нет| для пользователя
-                markup = InlineKeyboardMarkup(row_width=2)
-                markup.add(
-                    InlineKeyboardButton('Да', callback_data='start_yes'),
-                    InlineKeyboardButton('Нет', callback_data='start_no'),
+                yes_or_no_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
+                yes_or_no_kb.row(
+                    InlineKeyboardButton(text='Да', callback_data='start_yes'),
+                    InlineKeyboardButton(text='Нет', callback_data='start_no'),
+                    width=2
                 )
 
                 text = 'Бот осуществляет хранение и обработку персональных данных '
@@ -109,7 +116,7 @@ async def process_start_command(message: Message):
                 text += 'Вы даете разрешение на хранение и обработку своих персональных данных?'
                 await message.answer(
                     text=text,
-                    reply_markup=markup,
+                    reply_markup=yes_or_no_kb.as_markup(),
                 )
             else:
                 await message.answer(
@@ -129,29 +136,34 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
             if call.data == 'start_yes':
                 text = 'Спасибо! Удачной учебы!\n'
                 text += 'Для вашей идентификации введите ФИО:'
-                await call.answer(text=text)
 
                 # Устанавливаем состояние ожидания ввода ФИО
-                await state.set_state(AuthStates.full_name)
+                await state.set_state(state=AuthStates.full_name)
+
+                await call.message.edit_text(text=text)
 
             if call.data == 'start_no':
-                await call.answer(
+                await call.message.edit_text(
                     text='Жаль! Если передумаете - перезапустите бота!',
                 )
         case _:
-            await call.answer(
+            await call.message.edit_text(
                 text='Неизвестный формат для обработки данных!',
             )
 
 
-@auth_router.callback_query(StateFilter(AuthStates.full_name))
+@auth_router.message(StateFilter(AuthStates.full_name))
 async def input_full_name(message: Message, state: FSMContext):
     """
         Ввод полного имени (ФИО) студентом
         для его успешной авторизации в чате
     """
+
     full_name = message.text
-    if len(full_name.split(' ')) != 3:
+    fio_pattern: re.Pattern = re.compile(
+        r'[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]'
+    )
+    if not fio_pattern.match(full_name):
         await message.answer(
            text='Пожалуйста, введите полное ФИО! Например: Иванов Иван Иванович'
         )
@@ -162,7 +174,7 @@ async def input_full_name(message: Message, state: FSMContext):
             student_crud.set_telegram_id(full_name, message.from_user.id)
             await message.answer(
                 text='Поздравляю! Вы успешно авторизовались!',
-                # TODO: клавиатура
+                reply_markup=student_keyboard()
             )
             # очищаем состояние
             await state.clear()

@@ -18,7 +18,7 @@ class IsNotOnlyAdmin(BaseFilter):
 
 class IsStudent(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return student_crud.is_student(Message.from_user.id)
+        return student_crud.is_student(message.from_user.id)
 
 class IsTeacher(BaseFilter):
     async def __call__(self, message: Message) -> bool:
@@ -42,6 +42,16 @@ class IsOnlyTeacherCommands(BaseFilter):
             admin_crud.is_admin_with_teacher_mode(message.from_user.id)
 
         return  is_only_teacher and command in self.teacher_commands.values()
+
+
+class IsOnlyStudentCommands(BaseFilter):
+    def __init__(self, student_commands: dict) -> None:
+        self.student_commands = student_commands
+    async def __call__(self, message: Message) -> bool:
+        command: str = message.text
+
+        return  student_crud.is_student(message.from_user.id) \
+            and command in self.student_commands.values()
 
 
 class AddStudentCallbackFactory(CallbackData,
