@@ -12,7 +12,7 @@ from aiogram.fsm.context import FSMContext
 
 from database.main_db import admin_crud
 
-from homeworkbot.filters import IsOnlyAdminCommands, IsAdmin
+from homeworkbot.filters import IsOnlyAdminCommands
 from homeworkbot.routers import admin_menu_router
 
 from homeworkbot.admin_handlers.add_chat import _handle_add_chat

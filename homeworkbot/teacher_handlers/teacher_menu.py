@@ -11,7 +11,6 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from database.main_db import teacher_crud
 import homeworkbot.admin_handlers.admin_menu as admin_keyboard
 from database.main_db.admin_crud import is_admin
-from database.main_db.teacher_crud import is_teacher
 
 from homeworkbot.routers import teacher_menu_router
 from homeworkbot.filters import IsOnlyTeacherCommands
@@ -128,18 +127,6 @@ async def switch_teacher_to_admin_menu(message: Message):
         disable_web_page_preview=True,
         reply_markup=admin_keyboard.first_admin_keyboard(message),
     )
-
-
-def is_teacher_command(command: str) -> bool:
-    """Проверка на преподские команды.
-
-    Args:
-        command (str): команда.
-    """
-    for key, value in __teacher_commands.items():
-        if value == command:
-            return True
-    return False
 
 
 def get_current_teacher_command(command: str) -> TeacherCommand:

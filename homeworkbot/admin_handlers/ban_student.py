@@ -8,7 +8,7 @@ from homeworkbot.admin_handlers.utils import \
     create_groups_button, create_callback_students_button
 
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
-from homeworkbot.routers import admin_router
+from homeworkbot.routers import admin_router, common_router
 
 @admin_router.message(IsOnlyAdmin(), Command(commands=['ban']),
                       StateFilter(default_state))
@@ -22,7 +22,7 @@ async def handle_no_ban_student(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 
 
-@admin_router.callback_query(
+@common_router.callback_query(
     lambda call: 'studentBan_' in call.data or 'groupBan_' in call.data
 )
 async def callback_ban_student(call: CallbackQuery):

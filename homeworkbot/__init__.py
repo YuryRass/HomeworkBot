@@ -1,6 +1,5 @@
-__all__ = ['bot', 'dispatcher']
-
 from homeworkbot.configuration import bot, dispatcher
+
 import homeworkbot.admin_handlers as admin_handlers
 import homeworkbot.student_handlers as student_handlers
 import homeworkbot.teacher_handlers as teacher_handlers

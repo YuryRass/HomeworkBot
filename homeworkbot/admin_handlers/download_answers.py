@@ -17,7 +17,7 @@ from aiogram.types.input_file import FSInputFile
 from database.main_db import admin_crud
 from homeworkbot.admin_handlers.utils import create_discipline_button
 from homeworkbot.configuration import bot
-from homeworkbot.routers import admin_router
+from homeworkbot.routers import admin_router, common_router
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from reports.create_answers_archive import create_answers_archive
 
@@ -56,7 +56,7 @@ def __is_answer_prefix_callback(data: str) -> bool:
     return False
 
 
-@admin_router.callback_query(lambda call: __is_answer_prefix_callback(call.data))
+@common_router.callback_query(lambda call: __is_answer_prefix_callback(call.data))
 async def callback_download_answers(call: CallbackQuery):
     """Обработчик анализа коллбэков для загрузки ответов студентов
 

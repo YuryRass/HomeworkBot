@@ -19,7 +19,7 @@ import database.main_db.student_crud as student_crud
 from database.main_db.common_crud import UserEnum
 
 
-router: Router = Router()
+auth_router: Router = Router()
 
 
 class AuthStates(StatesGroup):
@@ -55,7 +55,7 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
             return False
 
 
-@router.message(CommandStart())
+@auth_router.message(CommandStart())
 async def process_start_command(message: Message):
     """
         Хэндлер, срабатывающий на команду '\start'
@@ -116,7 +116,7 @@ async def process_start_command(message: Message):
                     text='Пожалуйста, подпишитесь на канал!!!',
                 )
 
-@router.callback_query(lambda call: 'start_' in call.data,
+@auth_router.callback_query(lambda call: 'start_' in call.data,
                        StateFilter(default_state))
 async def callback_auth_query(call: CallbackQuery, state: FSMContext):
     """
@@ -144,7 +144,7 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
             )
 
 
-@router.callback_query(StateFilter(AuthStates.full_name))
+@auth_router.callback_query(StateFilter(AuthStates.full_name))
 async def input_full_name(message: Message, state: FSMContext):
     """
         Ввод полного имени (ФИО) студентом

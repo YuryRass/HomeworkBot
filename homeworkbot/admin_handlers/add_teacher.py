@@ -25,7 +25,7 @@ async def handle_add_teacher(message: Message, state: FSMContext):
     await _handle_add_teacher(message, state)
 
 
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addchat']),
+@admin_router.message(IsNotOnlyAdmin(), Command(commands=['addteacher']),
                 StateFilter(default_state))
 async def handle_no_add_chat(message: Message):
     """Обработчик невозможности добавления препода в таблицу"""

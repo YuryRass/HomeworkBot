@@ -8,18 +8,13 @@ from aiogram.filters.callback_data import CallbackData
 from database.main_db import admin_crud, teacher_crud, \
     student_crud
 
-class IsAdmin(BaseFilter):
+class IsOnlyAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         return admin_crud.is_admin_no_teacher_mode(message.from_user.id)
 
-class IsOnlyAdmin(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        return admin_crud.is_admin(message.from_user.id)
-
-
 class IsNotOnlyAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return not admin_crud.is_admin(message.from_user.id)
+        return not admin_crud.is_admin_no_teacher_mode(message.from_user.id)
 
 class IsStudent(BaseFilter):
     async def __call__(self, message: Message) -> bool:
@@ -28,10 +23,6 @@ class IsStudent(BaseFilter):
 class IsTeacher(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         return teacher_crud.is_teacher(message.from_user.id)
-
-class IsNotTeacher(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        return not teacher_crud.is_teacher(message.from_user.id)
 
 class IsOnlyAdminCommands(BaseFilter):
     def __init__(self, admin_commands: dict) -> None:

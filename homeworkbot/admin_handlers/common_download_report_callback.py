@@ -8,7 +8,7 @@ from aiogram.types.input_file import FSInputFile
 
 from database.main_db import admin_crud, teacher_crud, common_crud
 from homeworkbot import bot
-from homeworkbot.routers import admin_router
+from homeworkbot.routers import common_router
 from reports.run_report_builder import ReportBuilderTypeEnum, run_report_builder
 
 # префиксы для callback-ов по созданию отчетов
@@ -52,9 +52,9 @@ def __is_download_prefix_callback(data: str) -> bool:
     return False
 
 
-@admin_router.callback_query(lambda call: __is_download_prefix_callback(call.data))
+@common_router.callback_query(lambda call: __is_download_prefix_callback(call.data))
 async def callback_download_full_report(call: CallbackQuery):
-    """Функуия обработки коллбэков по созданию отчетов успеваемости студентов.
+    """Функция обработки коллбэков по созданию отчетов успеваемости студентов.
 
     Args:
         call (CallbackQuery): коллбэк.

@@ -5,7 +5,7 @@ from aiogram.fsm.state import default_state
 
 from database.main_db import common_crud
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
-from homeworkbot.routers import admin_router
+from homeworkbot.routers import admin_router, common_router
 
 
 @admin_router.message(IsOnlyAdmin(), Command(commands=['unban']),
@@ -44,7 +44,7 @@ async def create_unban_student_buttons(message: Message):
     )
 
 
-@admin_router.callback_query(lambda call: 'studentUnBan_' in call.data)
+@common_router.callback_query(lambda call: 'studentUnBan_' in call.data)
 async def callback_unban_student(call: CallbackQuery):
     """Обработчик коллбэка для разбанивания студента.
 
