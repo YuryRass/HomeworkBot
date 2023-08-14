@@ -1,5 +1,6 @@
 """
-Модуль обработки команды администратора на скачивание ответов студентов по учебным дисциплинам.
+Модуль обработки команды препода на скачивание ответов студентов
+по учебным дисциплинам.
 """
 
 import asyncio
@@ -9,33 +10,17 @@ from aiogram.types import (
     Message, CallbackQuery, InlineKeyboardButton
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.filters import Command, StateFilter
-from aiogram.fsm.state import default_state
 from aiogram.types.input_file import FSInputFile
 
-from database.main_db import admin_crud
-from homeworkbot.admin_handlers.utils import create_discipline_button
+from database.main_db import teacher_crud, common_crud
 from homeworkbot.configuration import bot
-from homeworkbot.routers import admin_router, common_router
-from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
+from homeworkbot.routers import common_router
 from reports.create_answers_archive import create_answers_archive
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['granswer']),
-                      StateFilter(default_state))
-async def handle_download_answers(message: Message):
-    await create_discipline_button(message, 'dowAnswersDis')
-
-
-@admin_router.message(IsNotOnlyAdmin(), Command(commands=['granswer']),
-                      StateFilter(default_state))
-async def handle_no_download_answers(message: Message):
-    await message.answer(text="Нет прав доступа!!!")
-
-
 __answer_prefix = [
-    'dowAnswersDis_',
-    'dowAnswersGr_',
+    'dowTAnswersDis_',
+    'dowTAnswersGr_',
 ]
 
 
@@ -66,9 +51,9 @@ async def callback_download_answers(call: CallbackQuery):
     match type_callback:
         # выбор учебной группы для соответсвующей дисциплины,
         # откуда будут загружаться ответы.
-        case 'dowAnswersDis':
+        case 'dowTAnswersDis':
             discipline_id = int(call.data.split('_')[1])
-            discipline = admin_crud.get_discipline(discipline_id)
+            discipline = common_crud.get_discipline(discipline_id)
 
             # путь до ответов студентов для указанной дисциплины
             path = Path.cwd().joinpath(discipline.path_to_answer)
@@ -79,11 +64,21 @@ async def callback_download_answers(call: CallbackQuery):
             if not dirs:
                 await call.message.edit_text(text="Директории для скачивания ответов отсутствуют")
             else:
+                teacher_groups = teacher_crud.get_assign_groups(call.from_user.id)
+                dirs = [
+                    it for it in dirs if it.name in
+                        [tg.group_name for tg in teacher_groups]
+                ]
+                if not dirs:
+                    await call.message.edit_text(
+                        text="Данной группе дисциплины не назначены"
+                    )
+                    return
                 groups_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
                 groups_kb.row(
                     *[InlineKeyboardButton(
                         text=it.name,
-                        callback_data=f'dowAnswersGr_{it.name}_{discipline_id}'
+                        callback_data=f'dowTAnswersGr_{it.name}_{discipline_id}'
                     ) for it in dirs],
                     width=1
                 )
@@ -92,10 +87,10 @@ async def callback_download_answers(call: CallbackQuery):
                     reply_markup=groups_kb.as_markup()
                 )
         # скачивание ответов для выбранной учебной группы
-        case 'dowAnswersGr':
+        case 'dowTAnswersGr':
             group_name = call.data.split('_')[1]
             discipline_id = int(call.data.split('_')[2])
-            discipline = admin_crud.get_discipline(discipline_id)
+            discipline = common_crud.get_discipline(discipline_id)
 
             # путь до ответов студентов для выбранной дисциплины
             path = Path.cwd().joinpath(discipline.path_to_answer)

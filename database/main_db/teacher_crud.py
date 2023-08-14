@@ -1,10 +1,13 @@
 """
-    Модуль teacher_crud.py выполняет CRUD-операции с таблицей 'Teacher'
+    Модуль teacher_crud.py выполняет CRUD-операции,
+    необхимые преподаваетлю, с БД
 """
 from database.main_db.database import Session
 
 from model.main_db.admin import Admin
 from model.main_db.teacher import Teacher
+from model.main_db.group import Group
+from model.main_db.teacher_group import TeacherGroup
 
 
 def is_teacher(telegram_id: int) -> bool:
@@ -83,3 +86,46 @@ def switch_teacher_mode_to_admin(teacher_tg_id: int) -> None:
             {'teacher_mode': False}
         )
         session.commit()
+
+def get_assign_groups(teacher_tg_id: int) -> list[Group]:
+    """
+    Функция запроса списка групп, у которых ведет предметы преподаватель
+
+    :param teacher_tg_id: телеграм идентификатор преподавателя
+
+    :return: список групп
+    """
+    with Session() as session:
+        teacher = session.query(Teacher).filter(
+            Teacher.telegram_id == teacher_tg_id
+        ).first()
+        assign_group = session.query(TeacherGroup).filter(
+            TeacherGroup.teacher_id == teacher.id
+        ).all()
+        assign_group = [it.group_id for it in assign_group]
+        assign_group = session.query(Group).filter(
+            Group.id.in_(assign_group)
+        ).all()
+        return assign_group
+
+
+
+def get_teacher_disciplines(teacher_tg_id: int) -> list[Discipline]:
+    """
+    Функция запроса списка дисциплин, которые числятся за преподавателем
+
+    :param teacher_tg_id: телеграм идентификатор преподавателя
+
+    :return: список дисциплин
+    """
+    with Session() as session:
+        disciplines = session.query(Discipline).join(
+            TeacherDiscipline,
+            TeacherDiscipline.discipline_id == Discipline.id
+        ).join(
+            Teacher,
+            TeacherDiscipline.teacher_id == Teacher.id
+        ).filter(
+            Teacher.telegram_id == teacher_tg_id
+        ).all()
+        return disciplines
