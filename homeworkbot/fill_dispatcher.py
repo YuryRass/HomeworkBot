@@ -31,3 +31,4 @@ def include_routers_in_dispatcher(dispatcher: Dispatcher) -> None:
 
     dispatcher.include_router(admin_router)
     dispatcher.include_router(common_router)
+    dispatcher.include_router(student_router)

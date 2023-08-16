@@ -7,8 +7,7 @@ import re
 
 from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter
-from aiogram.types import Message, InlineKeyboardMarkup, \
-    InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, InlineKeyboardButton, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters.state import State, StatesGroup
@@ -19,6 +18,8 @@ from homeworkbot.configuration import bot
 from homeworkbot.admin_handlers import admin_keyboard
 from homeworkbot.student_handlers import student_keyboard
 from homeworkbot.teacher_handlers import create_teacher_keyboard
+
+from homeworkbot.lexicon import bot_auth_messages, BotAuthUsers
 
 import database.main_db.common_crud as common_crud
 import database.main_db.student_crud as student_crud
@@ -78,17 +79,17 @@ async def process_start_command(message: Message):
     match user:
         case UserEnum.Admin:
             await message.answer(
-                text='<b>О, мой повелитель! Бот готов издеваться над студентами!!!</b>',
+                text=bot_auth_messages[BotAuthUsers.ADMIN_AUTH_ANSWER],
                 reply_markup=admin_keyboard(message)
             )
         case UserEnum.Teacher:
             await message.answer(
-                text='Приветствую! Надеюсь, что в этом году студенты вас не разочаруют!',
+                text=bot_auth_messages[BotAuthUsers.TEACHER_AUTH_ANSWER],
                 reply_markup=create_teacher_keyboard(message)
             )
         case UserEnum.Student:
             await message.answer(
-                text='С возвращением! О, юный падаван ;)',
+                text=bot_auth_messages[BotAuthUsers.STUDENT_AUTH_ANSWER],
                 reply_markup=student_keyboard()
             )
         case _:
@@ -100,28 +101,23 @@ async def process_start_command(message: Message):
                     break
 
             if user_in_chat:
-                # создаем инлаин-кнопки | Да | Нет| для пользователя
+                # создаем инлаин-кнопки | Да | Нет| для пользователя-студента
                 yes_or_no_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
                 yes_or_no_kb.row(
-                    InlineKeyboardButton(text='Да', callback_data='start_yes'),
-                    InlineKeyboardButton(text='Нет', callback_data='start_no'),
+                    InlineKeyboardButton(text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_YES],
+                                         callback_data='start_yes'),
+                    InlineKeyboardButton(text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_NO],
+                                         callback_data='start_no'),
                     width=2
                 )
 
-                text = 'Бот осуществляет хранение и обработку персональных данных '
-                text += 'на российских серверах. К таким данным относятся: \n'
-                text += '- ФИО\n'
-                text += '- Успеваемость по предмету\n'
-                text += 'Telegram ID\n'
-                text += 'Вы даете разрешение на хранение и обработку своих персональных данных?'
+                # запрос разрешения у студента на обработку его персональных данных
                 await message.answer(
-                    text=text,
+                    text=bot_auth_messages[BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST],
                     reply_markup=yes_or_no_kb.as_markup(),
                 )
             else:
-                await message.answer(
-                    text='Пожалуйста, подпишитесь на канал!!!',
-                )
+                await message.answer(text=bot_auth_messages[BotAuthUsers.TG_USER_NOT_IN_CHAT],)
 
 @auth_router.callback_query(lambda call: 'start_' in call.data,
                        StateFilter(default_state))

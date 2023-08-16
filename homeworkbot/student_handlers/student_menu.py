@@ -7,6 +7,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from homeworkbot.routers import student_menu_router
 from homeworkbot.filters import IsOnlyStudentCommands
+from homeworkbot.student_handlers.utils import create_student_disciplines_button
 
 
 class StudentException(Exception):
@@ -56,11 +57,11 @@ async def handle_commands(message: Message):
     command = get_current_student_command(message.text)
     match command:
         case StudentCommand.UPLOAD_ANSWER:
-            ...
+            await create_student_disciplines_button(message, 'uploadAnswer')
         case StudentCommand.NEAREST_DEADLINE:
-            ...
+            await create_student_disciplines_button(message, 'nearestDeadline')
         case StudentCommand.ACADEMIC_PERFORMANCE:
-            ...
+            await create_student_disciplines_button(message, 'academicPerf')
 
 
 def get_current_student_command(command: str) -> StudentCommand:

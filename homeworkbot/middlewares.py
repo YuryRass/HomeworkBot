@@ -1,9 +1,12 @@
+"""Модуль реализует промежуточные ПО"""
+
+from enum import Enum, auto
 from typing import Callable, Dict, Any, Awaitable
 
-from aiogram import Bot, BaseMiddleware
-from aiogram.types import TelegramObject
+from aiogram import BaseMiddleware
+from aiogram.types import Message
 
-from database.main_db import common_crud
+from database.main_db import student_crud, common_crud
 
 
 class BanMiddleware(BaseMiddleware):
@@ -13,8 +16,8 @@ class BanMiddleware(BaseMiddleware):
     """
     async def __call__(
         self,
-        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
+        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+        event: Message,
         data: Dict[str, Any]
     ) -> Any:
         # Если студент не находится в бан-листе,
@@ -28,3 +31,100 @@ class BanMiddleware(BaseMiddleware):
                 f'Для разблокировки обратитесь к своему преподавателю!'
             )
         return
+
+class FloodMiddlewareState(Enum):
+    """Класс состояний по загрузке ответов студентами"""
+
+    # загрузка ответов уже произведена
+    # (повторная загрузка может быть через определенный интервал времени)
+    UPLOAD_ANSWER = auto()
+    # одидание загрузки ответов студентом
+    WAIT_UPLOAD_ANSWER = auto()
+
+class StudentFloodMiddleware(BaseMiddleware):
+    """
+    Класс промежуточного ПО, внедряемого в бота для лимитирования запросов
+    студентов на загрузку ответов на л/р (д/р) и команд на проверку успеваимости
+    """
+    def __init__(self, load_answers_limit: int, commands_limit: int) -> None:
+        """
+        :param load_answers_limit: ограничение (в минутах) на период загрузки ответов
+        :param commands_limit: ограничение (в минутах) на период запросов данных об успеваимости
+
+        :return:
+        """
+
+        self.last_answer_time = {} # время последней зарузки ответов студентом
+
+        # время последнего запроса данных об успеваимости студента
+        self.last_command_time = {}
+
+        # словарь состояний со значениями класса FloodMiddlewareState
+        self.state = {}
+
+        # период времени (в секундах), через который можно
+        # повторно загрузить ответы студенту
+        self.load_answers_limit = load_answers_limit * 60
+
+        # период времени (в секундах), через который
+        # студенту можно узнать про свою успеваемость
+        self.commands_limit = commands_limit * 60
+
+    async def __call__(
+        self,
+        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+        event: Message,
+        data: Dict[str, Any]
+    ) -> Any:
+        if student_crud.is_student(event.from_user.id):
+            if event.text in ['Ближайший дедлайн', 'Успеваимость', 'Загрузить ответ']:
+                if (not event.from_user.id in self.last_answer_time and
+                        event.text == 'Загрузить ответ'):
+                    self.state[event.from_user.id] = FloodMiddlewareState.WAIT_UPLOAD_ANSWER
+                    self.last_answer_time[event.from_user.id] = event.date
+                    return await handler(event, data)
+
+                if (not event.from_user.id in self.last_command_time and
+                        event.text in ['Ближайший дедлайн', 'Успеваимость']):
+                    self.last_command_time[event.from_user.id] = event.date
+                    return await handler(event, data)
+
+                is_not_success = False # флаг доступа студента
+                last_time = 0 # время, через котрое можно будет обратиться к боту студенту
+
+                match event.text:
+                    case 'Загрузить ответ':
+                        if (event.date - self.last_answer_time[event.from_user.id] <
+                                self.load_answers_limit):
+                            last_time = self.load_answers_limit
+                            last_time -= event.date - self.last_answer_time[event.from_user.id]
+                            is_not_success = True
+                        else:
+                            self.state[event.from_user.id] = FloodMiddlewareState.WAIT_UPLOAD_ANSWER
+                        self.last_answer_time[event.from_user.id] = event.date
+                    case _:
+                        if (event.date - self.last_command_time[event.from_user.id] <
+                                self.commands_limit):
+                            last_time = self.commands_limit
+                            last_time -= event.date - self.last_command_time[event.from_user.id]
+                            is_not_success = True
+                        self.last_command_time[event.from_user.id] = event.date
+
+                if is_not_success:
+                    await event.answer(
+                        text=f'Лимит до следующего обращения к боту еще не истек!!!'
+                        f'Обратитесь к боту через {last_time // 60} минут...'
+                    )
+                    return
+
+            elif event.text == '/start':
+                return await handler(event, data)
+            else:
+                if (self.state[event.from_user.id] == FloodMiddlewareState.WAIT_UPLOAD_ANSWER and
+                        event.content_type == 'document'):
+                    self.state[event.from_user.id] = FloodMiddlewareState.UPLOAD_ANSWER
+                else:
+                    return
+        # для других Tg-пользователей:
+        else:
+            return await handler(event, data)

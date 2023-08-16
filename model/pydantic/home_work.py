@@ -30,7 +30,7 @@ class HomeWork(BaseModel):
         deadline (date): крайняя дата выполнения работы.
         tasks (list[HomeTask]): список заданий.
         is_done (bool): флаг о выполнении лаб. работы.
-        end_time (datetime): время завершения.
+        end_time (datetime): время завершения л/р.
 
     """
     number: int

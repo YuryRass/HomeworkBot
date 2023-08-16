@@ -4,6 +4,8 @@
 from database.main_db.database import Session
 
 from model.main_db.student import Student
+from model.main_db.assigned_discipline import AssignedDiscipline
+from model.main_db.discipline import Discipline
 
 
 def has_student(full_name: str) -> bool:
@@ -49,3 +51,37 @@ def set_telegram_id(full_name: str, telegram_id: int) -> None:
             {Student.telegram_id: telegram_id}, synchronize_session='fetch'
         )
         session.commit()
+
+def get_student_by_tg_id(telegram_id: int):
+    """
+    Функция запроса студента по идентификатору телеграмма
+
+    :param telegram_id: телеграм id студента
+
+    :return: Студент
+    """
+    with Session() as session:
+        student = (
+            session.query(Student).filter(Student.telegram_id == telegram_id).first()
+        )
+        return student
+
+def get_assign_disciplines(student_tg_id: int) -> list[Discipline]:
+    """Функция возвращает список дисциплин, назначенных студенту
+    с Tg ID = student_tg_id
+
+    Args:
+        student_tg_id (int): ID студента в телеграмме.
+
+    Returns:
+        list[Discipline]: спсиок дисциплин.
+    """
+    with Session() as session:
+        disciplines = session.query(Discipline).join(
+            AssignedDiscipline, Discipline.id == AssignedDiscipline.discipline_id
+        ).join(
+            Student, AssignedDiscipline.student_id == Student.id
+        ).filter(
+            Student.telegram_id == student_tg_id
+        ).all()
+        return disciplines

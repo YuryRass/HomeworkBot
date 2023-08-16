@@ -56,8 +56,10 @@ def user_verification(telegram_id: int) -> UserEnum:
 
 
 def get_chats() -> list[int]:
-    """
-        Получение списка с идентифкаторами Tg-чатов.
+    """Получение списка с идентифкаторами Tg-чатов
+
+    Returns:
+        list[int]: список с идентифкаторами Tg-чатов
     """
     with Session() as session:
         chats = session.query(Chat).all()
