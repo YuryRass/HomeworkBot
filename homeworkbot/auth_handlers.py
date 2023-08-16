@@ -19,7 +19,10 @@ from homeworkbot.admin_handlers import admin_keyboard
 from homeworkbot.student_handlers import student_keyboard
 from homeworkbot.teacher_handlers import create_teacher_keyboard
 
-from homeworkbot.lexicon import bot_auth_messages, BotAuthUsers
+from homeworkbot.lexicon import (
+    bot_auth_messages, bot_auth_callbacks,
+    bot_auth_errors, BotAuthUsers, BotAuthErrors
+)
 
 import database.main_db.common_crud as common_crud
 import database.main_db.student_crud as student_crud
@@ -104,10 +107,14 @@ async def process_start_command(message: Message):
                 # создаем инлаин-кнопки | Да | Нет| для пользователя-студента
                 yes_or_no_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
                 yes_or_no_kb.row(
-                    InlineKeyboardButton(text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_YES],
-                                         callback_data='start_yes'),
-                    InlineKeyboardButton(text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_NO],
-                                         callback_data='start_no'),
+                    InlineKeyboardButton(
+                        text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_YES],
+                        callback_data=bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK]
+                    ),
+                    InlineKeyboardButton(
+                        text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_NO],
+                        callback_data=bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK]
+                    ),
                     width=2
                 )
 
@@ -119,8 +126,12 @@ async def process_start_command(message: Message):
             else:
                 await message.answer(text=bot_auth_messages[BotAuthUsers.TG_USER_NOT_IN_CHAT],)
 
-@auth_router.callback_query(lambda call: 'start_' in call.data,
-                       StateFilter(default_state))
+@auth_router.callback_query(
+    lambda call: call.data in [
+        bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK],
+        bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK]
+    ], StateFilter(default_state)
+)
 async def callback_auth_query(call: CallbackQuery, state: FSMContext):
     """
         Начальныйц этап идентификации пользователя
@@ -129,22 +140,25 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
     type_callback = call.data.split('_')[0]
     match type_callback:
         case 'start':
-            if call.data == 'start_yes':
-                text = 'Спасибо! Удачной учебы!\n'
-                text += 'Для вашей идентификации введите ФИО:'
-
+            # положит. ответ от tg-пользователя
+            if call.data == bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK]:
                 # Устанавливаем состояние ожидания ввода ФИО
                 await state.set_state(state=AuthStates.full_name)
 
-                await call.message.edit_text(text=text)
-
-            if call.data == 'start_no':
+                # сообщени еот бота, чтобы пользователь ввел свои ФИО
                 await call.message.edit_text(
-                    text='Жаль! Если передумаете - перезапустите бота!',
+                    text=bot_auth_messages[BotAuthUsers.BOT_MESSAGE_FOR_INPUT_STUDENT_FULL_NAME]
+                )
+
+            # отриц. ответ от tg-пользователя
+            if call.data == bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK]:
+                await call.message.edit_text(
+                    text=bot_auth_callbacks[BotAuthUsers.BOT_ANSWER_ON_STUDENT_DISAGREEMENT],
                 )
         case _:
+            # неизвестный коллбэк-данные
             await call.message.edit_text(
-                text='Неизвестный формат для обработки данных!',
+                text=bot_auth_errors[BotAuthErrors.UNKNOWN_CALLBACK_DATA],
             )
 
 
@@ -161,15 +175,17 @@ async def input_full_name(message: Message, state: FSMContext):
     )
     if not fio_pattern.match(full_name):
         await message.answer(
-           text='Пожалуйста, введите полное ФИО! Например: Иванов Иван Иванович'
+           text=bot_auth_errors[BotAuthErrors.NOT_FULL_NAME]
         )
     else:
         # если студент с такими ФИО уже есть в таблице Student,
         # то обновляем его Telegram ID
         if student_crud.has_student(full_name):
             student_crud.set_telegram_id(full_name, message.from_user.id)
+
+            # студент успешно авторизовался:
             await message.answer(
-                text='Поздравляю! Вы успешно авторизовались!',
+                text=bot_auth_messages[BotAuthUsers.STUDENT_AUTH_SUCCESS],
                 reply_markup=student_keyboard()
             )
             # очищаем состояние
@@ -177,6 +193,5 @@ async def input_full_name(message: Message, state: FSMContext):
         # некорректный ввод ФИО
         else:
             await message.answer(
-                text='Пожалуйста, проверьте корректность ввода ФИО ' +
-                'или свяжитесь с преподавателем'
+                text=bot_auth_errors[BotAuthErrors.INCORECT_STUDENT_FULLNAME]
             )

@@ -1,10 +1,11 @@
 """Модуль реализует промежуточные ПО"""
 
+from datetime import timedelta
 from enum import Enum, auto
 from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message
+from aiogram.types import TelegramObject
 
 from database.main_db import student_crud, common_crud
 
@@ -16,8 +17,8 @@ class BanMiddleware(BaseMiddleware):
     """
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Message,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
         data: Dict[str, Any]
     ) -> Any:
         # Если студент не находится в бан-листе,
@@ -64,16 +65,16 @@ class StudentFloodMiddleware(BaseMiddleware):
 
         # период времени (в секундах), через который можно
         # повторно загрузить ответы студенту
-        self.load_answers_limit = load_answers_limit * 60
+        self.load_answers_limit = timedelta(seconds=load_answers_limit*60)
 
         # период времени (в секундах), через который
         # студенту можно узнать про свою успеваемость
-        self.commands_limit = commands_limit * 60
+        self.commands_limit = timedelta(seconds=commands_limit*60)
 
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Message,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
         data: Dict[str, Any]
     ) -> Any:
         if student_crud.is_student(event.from_user.id):
@@ -101,30 +102,39 @@ class StudentFloodMiddleware(BaseMiddleware):
                             is_not_success = True
                         else:
                             self.state[event.from_user.id] = FloodMiddlewareState.WAIT_UPLOAD_ANSWER
-                        self.last_answer_time[event.from_user.id] = event.date
+                            self.last_answer_time[event.from_user.id] = event.date
+                            return await handler(event, data)
                     case _:
                         if (event.date - self.last_command_time[event.from_user.id] <
                                 self.commands_limit):
                             last_time = self.commands_limit
                             last_time -= event.date - self.last_command_time[event.from_user.id]
                             is_not_success = True
-                        self.last_command_time[event.from_user.id] = event.date
+                        else:
+                            self.last_command_time[event.from_user.id] = event.date
+                            return await handler(event, data)
 
                 if is_not_success:
+                    minutes = (last_time.seconds % 3600) // 60
+                    minutes = f' {minutes} мин.' if minutes > 0 else ''
+                    seconds = last_time.seconds % 60
                     await event.answer(
                         text=f'Лимит до следующего обращения к боту еще не истек!!!'
-                        f'Обратитесь к боту через {last_time // 60} минут...'
+                        f'Обратитесь к боту через{minutes} {seconds} с.'
                     )
                     return
 
             elif event.text == '/start':
                 return await handler(event, data)
             else:
-                if (self.state[event.from_user.id] == FloodMiddlewareState.WAIT_UPLOAD_ANSWER and
-                        event.content_type == 'document'):
+                if (
+                    self.state and
+                    self.state[event.from_user.id] == FloodMiddlewareState.WAIT_UPLOAD_ANSWER and
+                    event.content_type == 'document'
+                ):
                     self.state[event.from_user.id] = FloodMiddlewareState.UPLOAD_ANSWER
-                else:
-                    return
+
+                return await handler(event, data)
         # для других Tg-пользователей:
         else:
             return await handler(event, data)
