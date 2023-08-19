@@ -1,7 +1,7 @@
 """
     Создание и инициализация основной БД
 """
-from database.main_db.first_run_configurator import FirstRunConfigurator
+
 from model.pydantic.db_creator_settings import DbCreatorSettings
 from model.main_db.group import Group
 from model.main_db.student import Student
@@ -13,7 +13,9 @@ from model.main_db.teacher_group import TeacherGroup
 from model.main_db.admin import Admin
 from model.main_db.chat import Chat
 from model.main_db.student_ban import StudentBan
+
 from database.main_db.database import create_db, Session
+from database.main_db.first_run_configurator import FirstRunConfigurator
 
 
 def create_main_db(settings: DbCreatorSettings) -> None:

@@ -3,7 +3,6 @@
 На основе данного отчета формируются другие отчеты.
 """
 import json
-import os
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
@@ -13,6 +12,8 @@ from openpyxl.workbook import Workbook
 
 from database.main_db import common_crud
 from model.pydantic.home_work import DisciplineHomeWorks
+
+from config import settings
 
 
 class ReportFieldEnum(IntEnum):
@@ -72,7 +73,7 @@ class BaseReportBuilder:
         self.discipline_name = discipline.short_name
         self.tasks_in_discipline = discipline.max_tasks
 
-        path = Path(Path.cwd().joinpath(os.getenv("TEMP_REPORT_DIR")))
+        path = Path(Path.cwd().joinpath(settings.TEMP_REPORT_DIR))
         self.__file_path = Path(
             path.joinpath(f'{discipline.short_name}_{prefix_file}_{group.group_name}.{extension}')
         )

@@ -1,8 +1,8 @@
-import os
 import shutil
 from datetime import datetime
 from pathlib import Path
 
+from config import settings
 
 def create_answers_archive(path_to_group_folder: Path) -> Path:
     """
@@ -13,7 +13,7 @@ def create_answers_archive(path_to_group_folder: Path) -> Path:
     :return: путь до сформированного архива.
     """
     # путь до папки, где будет храниться архив с ответами
-    path = Path(Path.cwd().joinpath(os.getenv("TEMP_REPORT_DIR")))
+    path = Path(Path.cwd().joinpath(settings.TEMP_REPORT_DIR))
 
     # название архива
     file_name = f'data_{datetime.now().date()}'

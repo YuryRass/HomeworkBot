@@ -4,13 +4,11 @@
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-from config import load_config, Config
+from config import settings
 
 
-# Загрузка данных из файла .env
-config: Config = load_config()
 Base = declarative_base()
-engine = create_engine(f'sqlite:///{config.db.database_name}.sqlite')
+engine = create_engine(settings.MAIN_DB_URL)
 
 Session = sessionmaker(bind=engine)
 

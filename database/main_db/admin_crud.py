@@ -2,9 +2,8 @@
     Модуль admin_crud.py реализует для администратора
     CRUD-операции, работающие с таблицами основной БД.
 """
-import os
+
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import exists, and_
 
 from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
@@ -29,8 +28,12 @@ from model.pydantic.db_start_data import DbStartData
 
 from utils.disciplines_utils import disciplines_works_from_json
 from utils.homework_utils import create_homeworks, homeworks_to_json
-from utils.disciplines_utils import disciplines_works_from_json, \
+from utils.disciplines_utils import (
+    disciplines_works_from_json,
     disciplines_works_to_json, counting_tasks
+)
+
+from config import settings
 
 
 def is_admin_no_teacher_mode(telegram_id: int) -> bool:
@@ -427,7 +430,7 @@ def remote_start_db_fill(data: DbStartData) -> None:
 
     # Tg ID админа по-умолчанию. Используется для сравнения
     # с другим ID, который передается в стартовой конфигурации
-    admin_default_tg = int(os.getenv("DEFAULT_ADMIN"))
+    admin_default_tg = settings.DEFAULT_ADMIN
     dis_short_names, groups_name = {}, {}
 
     try:

@@ -1,11 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-from config import load_config, Config
+from config import settings
 
 
-config: Config = load_config()
 Base = declarative_base()
-engine = create_engine(f'sqlite:///{config.db.queue_db_name}.sqlite')
+engine = create_engine(settings.QUEUE_DB_URL)
 
 Session = sessionmaker(bind=engine)
 
