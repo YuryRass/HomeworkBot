@@ -90,10 +90,10 @@ class DockerLogger(metaclass=_SingletonBaseClass):
 
         :return: None
         """
-        task = None
-        for i in range(len(self.lab_report.tasks)):
-            if task_id == self.lab_report.tasks[i].task_id:
-                task = self.lab_report.tasks[i]
+        task = None  # будут содержать инфу о предыдущих тестах
+        for it in self.lab_report.tasks:
+            if task_id == it.task_id:
+                task = it
                 break
 
         # если информации о задаче task нет в lab_report,
@@ -118,26 +118,15 @@ class DockerLogger(metaclass=_SingletonBaseClass):
                     # task.status = False, status = False
                     if description is not None:
                         task.description.add(description)
-                    # task.status = False, status = True
-                #     else:
-                #         task.status = True
-                #         task.description.add(description)
-                # # изменяем таск в self.lab_report.task
-                # self.lab_report.tasks[num_task] = task
 
     def save(self) -> None:
         """Сохранение результатов тестирования в JSON файл"""
         with open(self.path_to_log, 'w', encoding='utf-8') as fp:
-            # json.dump(
-            #     self.lab_report,
-            #     file,
-            #     sort_keys=False,
-            #     indent=4,
-            #     ensure_ascii=False,
-            #     separators=(',', ': '),
-            #     default=pydantic_encoder
-            # )
-            fp.write(self.lab_report.model_dump_json(indent=4, exclude_none=True))
+            fp.write(
+                self.lab_report.model_dump_json(
+                    indent=4, exclude_none=True
+                )
+            )
 
     def to_json(self) -> str:
         """
@@ -146,11 +135,4 @@ class DockerLogger(metaclass=_SingletonBaseClass):
 
         :return: результат тестирования в json-формате
         """
-        return json.dumps(
-                    self.lab_report,
-                    sort_keys=False,
-                    indent=4,
-                    ensure_ascii=False,
-                    separators=(',', ': '),
-                    #default=pydantic_encoder
-                )
+        return self.lab_report.model_dump_json(indent=4, exclude_none=True)

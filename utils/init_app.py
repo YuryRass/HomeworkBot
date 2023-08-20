@@ -33,4 +33,6 @@ def init_app() -> None:
 
     # создание директории для отчетов о студентах
     path = Path.cwd()
-    Path(path.joinpath(settings.TEMP_REPORT_DIR)).mkdir(parents=True, exist_ok=True)
+    Path(path.joinpath(settings.TEMP_REPORT_DIR)).mkdir(
+        parents=True, exist_ok=True
+    )

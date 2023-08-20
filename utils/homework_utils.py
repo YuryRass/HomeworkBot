@@ -5,7 +5,6 @@
     в таблице 'assigned_discipline' в столбце 'home_work'
 """
 import json
-from pydantic.json import pydantic_encoder
 from model.pydantic.discipline_works import DisciplineWorksConfig
 from model.pydantic.home_work import DisciplineHomeWorks, HomeWork, HomeTask
 
@@ -48,14 +47,8 @@ def homeworks_to_json(data: DisciplineHomeWorks) -> str:
     """
         Преобразовывает данные pydantic модели
         'Лабораторные работы по учебной дисциплине' в JSON формат.
+
         Параметры:
         data (DisciplineHomeWorks): данные pydantic модели.
     """
-    return json.dumps(
-        data,
-        sort_keys=False,
-        indent=4,
-        ensure_ascii=False,
-        separators=(',', ':'),
-        default=pydantic_encoder
-    )
+    return data.model_dump_json(indent=4, exclude_none=True)

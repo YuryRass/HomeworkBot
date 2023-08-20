@@ -64,7 +64,11 @@ async def process_assign_teacher_to_discipline(call: CallbackQuery) -> None:
             # назначаем дисциплину преподу
             assign_teacher_to_discipline(teacher_id, discipline_id)
 
-            await call.message.edit_text(text='Дисциплина назначена прподавателю')
+            await call.message.edit_text(
+                text='Дисциплина назначена прподавателю'
+            )
 
         case _:
-            await call.message.edit_text(text='Неизвестный формат для обработки данных')
+            await call.message.edit_text(
+                text='Неизвестный формат для обработки данных'
+            )

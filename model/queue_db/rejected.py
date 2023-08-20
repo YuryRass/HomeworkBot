@@ -12,4 +12,5 @@ class Rejected(Base):
     data = Column(JSON, nullable=False)
 
     def __repr__(self) -> str:
-        return f'Rejected [tID: {self.telegram_id}, chatID: {self.chat_id}, data: {self.data}'
+        return f'Rejected [tID: {self.telegram_id}, ' + \
+            f'chatID: {self.chat_id}, data: {self.data}'

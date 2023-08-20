@@ -12,4 +12,5 @@ class QueueIn(Base):
     data = Column(JSON, nullable=False)
 
     def __repr__(self) -> str:
-        return f'Q(input) [tID: {self.telegram_id}, chatID: {self.chat_id}, data: {self.data}'
+        return f'Q(input) [tID: {self.telegram_id}, chatID:' + \
+            f' {self.chat_id}, data: {self.data}'

@@ -33,7 +33,8 @@ async def handle_no_assign_teacher_to_group(message: Message):
 
 
 @admin_router.callback_query(
-    lambda call: 'assignTeacherGR_' in call.data or 'assignGroupT_' in call.data
+    lambda call: 'assignTeacherGR_' in call.data or
+    'assignGroupT_' in call.data
 )
 async def callback_assign_teacher_to_group(call: CallbackQuery):
     """
@@ -50,7 +51,8 @@ async def callback_assign_teacher_to_group(call: CallbackQuery):
             groups = admin_crud.get_not_assign_teacher_groups(teacher_id)
             if len(groups) < 1:
                 await call.message.edit_text(
-                    text="В БД отсутствуют группы, куда можно добавить студента!"
+                    text="В БД отсутствуют группы,' + \
+                        ' куда можно добавить студента!"
                 )
                 return
             # создание инлаин-кнопок с названиями групп
@@ -63,7 +65,7 @@ async def callback_assign_teacher_to_group(call: CallbackQuery):
                 width=1
             )
 
-            #bot.edit_message_text()
+            # bot.edit_message_text()
             await call.message.edit_text(
                 text="Выберите группу, которой назначается преподаватель:",
                 reply_markup=groups_kb.as_markup()
@@ -73,6 +75,10 @@ async def callback_assign_teacher_to_group(call: CallbackQuery):
             teacher_id = call.data.split('_')[2]
             # назначаем преподу группу
             admin_crud.assign_teacher_to_group(int(teacher_id), int(group_id))
-            await call.message.edit_text(text="Преподаватель назначен группе")
+            await call.message.edit_text(
+                text="Преподаватель назначен группе"
+            )
         case _:
-            await call.message.edit_text(text="Неизвестный формат для обработки данных")
+            await call.message.edit_text(
+                text="Неизвестный формат для обработки данных"
+            )

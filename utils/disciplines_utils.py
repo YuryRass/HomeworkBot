@@ -3,7 +3,6 @@
     для работы с учебными дисциплинами
 """
 import json
-from pydantic.json import pydantic_encoder
 
 from model.pydantic.discipline_works import DisciplinesConfig, \
     DisciplineWorksConfig
@@ -28,14 +27,7 @@ def disciplines_config_to_json(data: DisciplinesConfig) -> str:
         data (DisciplinesConfig): конфиг. данные учебных дисциплин.
 
     """
-    return json.dumps(
-        data,
-        sort_keys=False,
-        indent=4,
-        ensure_ascii=False,
-        separators=(',', ':'),
-        default=pydantic_encoder
-    )
+    return data.model_dump_json(indent=4, exclude_none=True)
 
 
 def disciplines_config_from_json(json_data: str) -> DisciplinesConfig:
@@ -53,19 +45,14 @@ def disciplines_works_to_json(data: DisciplineWorksConfig) -> str:
         Конвертирование pydantic модели 'Конфигурация работ дисциплины'
         в JSON формат.
         Параметры:
-        data (DisciplineWorksConfig): конфиг. данные работ по учебн. дисциплине.
+        data (DisciplineWorksConfig): конфиг. данные работ по дисциплине.
     """
-    return json.dumps(
-        data,
-        sort_keys=False,
-        indent=4,
-        ensure_ascii=False,
-        separators=(',', ':'),
-        default=pydantic_encoder
-    )
+    return data.model_dump_json(indent=4, exclude_none=True)
 
 
-def disciplines_works_from_json(json_data: str | bytes) -> DisciplineWorksConfig:
+def disciplines_works_from_json(
+    json_data: str | bytes
+) -> DisciplineWorksConfig:
     """
         Загрузка учебной дисциплины и перевод ее данных в pydantic модель
         Параметры:
@@ -79,7 +66,7 @@ def counting_tasks(discipline: DisciplineWorksConfig) -> int:
     """
         Возвращает количество домашних заданий по учебной дисциплине
         Параметры:
-        discipline (DisciplineWorksConfig): конфиг. данные работ по учебн. дисциплине.
+        discipline (DisciplineWorksConfig): конфиг. данные работ по дисциплине.
     """
     result = 0
     # в рамках некоторой учебной дисциплины пробегаем по всем лаб. работам
