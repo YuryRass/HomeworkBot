@@ -5,20 +5,22 @@
 import json
 import os
 from threading import Lock
-
-from pydantic.json import pydantic_encoder
 from .report_model import LabReport, TestLogInit, TaskReport
 
 
 class _SingletonBaseClass(type):
-    _instances = {}
-    _lock: Lock = Lock()
+    """Шаблон - одиночка."""
+    _instances = {}  # словарь с экземплярами классов
+    _lock: Lock = Lock()  # примитивныq объект блокировки
 
     def __call__(cls, *args, **kwargs):
-        with cls._lock:
+        with cls._lock:  # в синхронном режиме
+            # проверка на существование в словаре экземпляра класса
             if cls not in cls._instances:
+                # добавляем экземпляр родит. класса в словарь
                 instance = super().__call__(*args, **kwargs)
                 cls._instances[cls] = instance
+        # если объект есть в словаре, то возвращаем его
         return cls._instances[cls]
 
 
@@ -30,14 +32,14 @@ class DockerLogger(metaclass=_SingletonBaseClass):
         path_to_volume: str = 'data'  # TODO: Docker env
 
         # заполнение pydantic-модель TestLogInit
-        with open('log_init.json', encoding='utf-8') as file:
-            data = json.load(file.read())
+        with open('log_init.json', encoding='utf-8') as fp:
+            data = json.load(fp)
         self.test_settings = TestLogInit(**data)
-
         self.path_to_volume = path_to_volume
 
-        self.path_to_log = f'{self.test_settings.student_id}-{self.test_settings.lab_id}-' \
-                           f'{self.test_settings.run_time:%Y-%m-%d_%H-%M-%S%z}.json'
+        self.path_to_log = f'{self.test_settings.student_id}' + \
+            f'-{self.test_settings.lab_id}-' + \
+            f'{self.test_settings.run_time:%Y-%m-%d_%H-%M-%S%z}.json'
 
         # если файл-логгер существует, то считываем из него данные
         # о результатах проверки лаб. работы
@@ -45,7 +47,8 @@ class DockerLogger(metaclass=_SingletonBaseClass):
             with open(self.path_to_log, encoding='utf-8') as file:
                 data = json.load(file)
                 self.lab_report = LabReport(**data)
-        # в противном случае - производим начальную инициализацию переменной lab_report
+        # в противном случае - производим начальную инициализацию
+        # переменной lab_report
         else:
             self.lab_report = LabReport(
                 lab_id=self.test_settings.lab_id
@@ -75,7 +78,9 @@ class DockerLogger(metaclass=_SingletonBaseClass):
         """
         self.__add_task_report(task_id, False, description)
 
-    def __add_task_report(self, task_id: int, status: bool, description: str | None = None) -> None:
+    def __add_task_report(
+        self, task_id: int, status: bool, description: str | None = None
+    ) -> None:
         """
         Метод добавления записи в лог файл результата тестирования
 
@@ -85,11 +90,10 @@ class DockerLogger(metaclass=_SingletonBaseClass):
 
         :return: None
         """
-        task, num_task = None, None
+        task = None
         for i in range(len(self.lab_report.tasks)):
             if task_id == self.lab_report.tasks[i].task_id:
                 task = self.lab_report.tasks[i]
-                num_task = i
                 break
 
         # если информации о задаче task нет в lab_report,
@@ -100,37 +104,40 @@ class DockerLogger(metaclass=_SingletonBaseClass):
                     task_id=task_id,
                     time=self.test_settings.run_time,
                     status=status,
-                    description=[description] if description is not None else []
+                    description=[description] if description is not None
+                    else []
                 )
             )
         # task is not None
-        else: # обновляем данные в task
+        else:  # обновляем данные в task
             if not (task.status and status):
-                if task.status: # task.status = True, status = False
+                if task.status:  # task.status = True, status = False
                     task.status = False
                     task.description.add(description)
                 else:
                     # task.status = False, status = False
                     if description is not None:
                         task.description.add(description)
-                # изменяем таск в self.lab_report.task
-                self.lab_report.tasks[num_task] = task
-
-
-
+                    # task.status = False, status = True
+                #     else:
+                #         task.status = True
+                #         task.description.add(description)
+                # # изменяем таск в self.lab_report.task
+                # self.lab_report.tasks[num_task] = task
 
     def save(self) -> None:
         """Сохранение результатов тестирования в JSON файл"""
-        with open(self.path_to_log, 'w', encoding='utf-8') as file:
-            json.dump(
-                self.lab_report,
-                file,
-                sort_keys=False,
-                indent=4,
-                ensure_ascii=False,
-                separators=(',', ': '),
-                default=pydantic_encoder
-            )
+        with open(self.path_to_log, 'w', encoding='utf-8') as fp:
+            # json.dump(
+            #     self.lab_report,
+            #     file,
+            #     sort_keys=False,
+            #     indent=4,
+            #     ensure_ascii=False,
+            #     separators=(',', ': '),
+            #     default=pydantic_encoder
+            # )
+            fp.write(self.lab_report.model_dump_json(indent=4, exclude_none=True))
 
     def to_json(self) -> str:
         """
@@ -145,5 +152,5 @@ class DockerLogger(metaclass=_SingletonBaseClass):
                     indent=4,
                     ensure_ascii=False,
                     separators=(',', ': '),
-                    default=pydantic_encoder
+                    #default=pydantic_encoder
                 )
