@@ -9,6 +9,7 @@ from model.queue_db.queue_in import QueueIn
 from model.pydantic.test_rejected_files import TestRejectedFiles, RejectedType
 
 from testing_tools.checker.folder_builder import FolderBuilder
+from testing_tools.checker.keywords_controller import KeyWordsController
 
 
 class TaskProcessing:
@@ -60,6 +61,8 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
 
     :return: None
     """
+
+    # проверка ответов студентов на шаблон тестирования
     folder_builder = FolderBuilder(temp_folder_path, record)
     docker_folder_path = folder_builder.build()
     if folder_builder.has_rejected_files():
@@ -75,4 +78,23 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
         )
 
     if not folder_builder.has_file_for_test():
+        return None
+
+    # проверка на ключевые слова в ответах студентов
+    keywords_controller = KeyWordsController(docker_folder_path)
+    keywords_controller.run()
+    if keywords_controller.has_rejected_files():
+        rejected_crud.add_record(
+            record.telegram_id,
+            record.chat_id,
+            TestRejectedFiles(
+                type=RejectedType.KeyWordsError,
+                description='В файле(-ах) имеются запрещенные' +
+                ' ключевые слова, либо не используются ' +
+                'необходимые для решения задачи',
+                files=keywords_controller.get_rejected_file_names()
+            )
+        )
+
+    if not keywords_controller.has_file_for_test():
         return None

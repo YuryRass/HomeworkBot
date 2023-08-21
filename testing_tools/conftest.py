@@ -3,7 +3,7 @@
 """
 
 import pytest
-from .logger.docker_logger import DockerLogger
+from logger.docker_logger import DockerLogger
 
 
 @pytest.fixture(scope="session")
