@@ -1,10 +1,10 @@
 import asyncio
-import os
 from pathlib import Path
 
 from utils.init_app import init_app
 
 from homeworkbot import bot, dispatcher
+from config import settings
 import homeworkbot.fill_dispatcher as fill
 
 from testing_tools.answer.answer_processing import AnswerProcessing
@@ -12,13 +12,10 @@ from testing_tools.checker.task_processing import TaskProcessing
 
 
 async def main():
-    from dotenv import load_dotenv
-
-    load_dotenv()
 
     temp_path = Path.cwd()
-    temp_path = Path(temp_path.joinpath(os.getenv("TEMP_REPORT_DIR")))
-    dockers_run = int(os.getenv("AMOUNT_DOKER_RUN"))
+    temp_path = Path(temp_path.joinpath(settings.TEMP_REPORT_DIR))
+    dockers_run = int(settings.AMOUNT_DOKER_RUN)
 
     # Регистриуем роутеры в диспетчере
     fill.include_routers_in_dispatcher(dispatcher)
