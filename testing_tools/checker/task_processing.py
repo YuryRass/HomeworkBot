@@ -1,15 +1,19 @@
 """Модуль реализует подистему тестирования"""
 
 import asyncio
+import json
 from pathlib import Path
 
-from database.queue_db import queue_in_crud, rejected_crud
-
-from model.queue_db.queue_in import QueueIn
+from database.main_db import common_crud
+from database.queue_db import queue_in_crud, rejected_crud, queue_out_crud
+from model.pydantic.queue_in_raw import QueueInRaw
+from model.pydantic.queue_out_raw import TaskResult, TestResult
 from model.pydantic.test_rejected_files import TestRejectedFiles, RejectedType
-
+from model.queue_db.queue_in import QueueIn
+from testing_tools.checker.docker_builder import DockerBuilder
 from testing_tools.checker.folder_builder import FolderBuilder
 from testing_tools.checker.keywords_controller import KeyWordsController
+from testing_tools.logger.report_model import LabReport
 
 
 class TaskProcessing:
@@ -98,3 +102,60 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
 
     if not keywords_controller.has_file_for_test():
         return None
+
+    # добавляем файлы в папку, где будет запускаться докер
+    module_path = Path.cwd().joinpath('testing_tools')
+    folder_builder.add_file(module_path.joinpath('conftest.py'))
+    folder_builder.add_file(module_path.joinpath('docker_output.py'))
+    folder_builder.add_dir(module_path.joinpath('logger'))
+
+    docker_builder = DockerBuilder(
+        docker_folder_path,
+        record.telegram_id,
+        folder_builder.get_lab_number()
+    )
+    docker_builder.run_docker()
+
+    lab_report = LabReport(**json.loads(docker_builder.get_run_result()))
+    common_crud.write_test_result(lab_report, record)
+    _send_test_result_to_bot(lab_report, record)
+
+
+def _send_test_result_to_bot(lab_report: LabReport, record: QueueIn) -> None:
+    """
+    Функция отправки в промежуточную БД результата тестирования
+
+    :param record: запись из промежуточной БД, с данными
+    по загруженным ответам студента
+    :param lab_report: структура данных с результатами работы контейнера,
+    в котором запускалось тестирование
+
+    :return: None
+    """
+    straw = QueueInRaw(**json.loads(record.data))
+    result_report = TestResult(
+        discipline_id=straw.discipline_id,
+        lab_number=straw.lab_number
+    )
+    for it in lab_report.tasks:
+        if it.status:
+            result_report.successful_task.append(
+                TaskResult(
+                    task_id=it.task_id,
+                    file_name=f'lab{straw.lab_number}-{it.task_id}.py'
+                )
+            )
+        else:
+            result_report.failed_task.append(
+                TaskResult(
+                    task_id=it.task_id,
+                    file_name=f'lab{straw.lab_number}-{it.task_id}.py',
+                    description=it.description
+                )
+            )
+
+    queue_out_crud.add_record(
+        record.telegram_id,
+        record.chat_id,
+        result_report
+    )

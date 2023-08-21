@@ -8,9 +8,9 @@ class TestLocalSettings(BaseModel):
     Локальные политики конкретной задачи
     """
     lab_number: int
-    prohibition: list[str] | None # запреты
-    restriction: list[str] | None # ограничения
-    resolve_import: list[str] | None # разрешенные импорты
+    prohibition: list[str] | None  # запреты
+    restriction: list[str] | None  # ограничения
+    resolve_import: list[str] | None  # разрешенные импорты
 
 
 class TestGlobalSettings(BaseModel):
@@ -26,6 +26,6 @@ class TestSettings(BaseModel):
     Агрегация политик лабораторной (домашней) работы
     с зависимостями от внешних пакетов
     """
-    dependencies: list[str] | None
+    dependencies: list[str] | None  # зависимости (используются в докере)
     global_level: TestGlobalSettings
     local_level: list[TestLocalSettings]
