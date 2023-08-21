@@ -7,6 +7,7 @@ async-timeout==4.0.3
 attrs==23.1.0
 certifi==2023.7.22
 charset-normalizer==3.2.0
+click==8.1.7
 colorama==0.4.6
 et-xmlfile==1.1.0
 frozenlist==1.4.0
@@ -23,6 +24,11 @@ pydantic-settings==2.0.3
 pydantic_core==2.4.0
 pytest==7.4.0
 python-dotenv==1.0.0
+python-on-whales==0.64.2
+requests==2.31.0
 SQLAlchemy==1.4.46
+tqdm==4.66.1
+typer==0.9.0
 typing_extensions==4.7.1
+urllib3==2.0.4
 yarl==1.9.2
