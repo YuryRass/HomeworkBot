@@ -18,7 +18,7 @@ from database.main_db.database import create_db, Session
 from database.main_db.first_run_configurator import FirstRunConfigurator
 
 
-def create_main_db(settings: DbCreatorSettings) -> None:
+def create_main_tables(settings: DbCreatorSettings) -> None:
     """
         Создает и инициализирует основную БД
         Параметры:

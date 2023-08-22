@@ -7,7 +7,7 @@ from model.queue_db.rejected import Rejected
 from database.queue_db.database import create_db
 
 
-def create_queue_db() -> None:
+def create_queue_tables() -> None:
     """Создает промежуточеую БД.
     """
     create_db()
