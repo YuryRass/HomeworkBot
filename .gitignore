@@ -81,6 +81,9 @@ target/
 profile_default/
 ipython_config.py
 
+# Python files
+python3.11.exe*
+
 # pyenv
 .python-version
 
