@@ -1,13 +1,18 @@
+"""Модуль для создания таблиц промежуточной БД"""
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from config import settings
 
 
-Base = declarative_base()
-engine = create_engine(settings.QUEUE_DB_URL)
+class Base(DeclarativeBase):
+    ...
+
+
+engine = create_engine(url=settings.QUEUE_DB_URL)
 
 Session = sessionmaker(bind=engine)
 
 
-def create_db():
+def create_tables():
     Base.metadata.create_all(bind=engine)

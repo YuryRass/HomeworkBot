@@ -14,7 +14,7 @@ from model.main_db.admin import Admin
 from model.main_db.chat import Chat
 from model.main_db.student_ban import StudentBan
 
-from database.main_db.database import create_db, Session
+from database.main_db.database import create_tables, Session
 from database.main_db.first_run_configurator import FirstRunConfigurator
 
 
@@ -25,8 +25,8 @@ def create_main_tables(settings: DbCreatorSettings) -> None:
         settings (DbCreatorSettings): настройки для первоначальной
     инициализации БД.
     """
-    # Создание БД
-    create_db()
+    # Создание таблиц
+    create_tables()
 
     # Если REMOTE_CONFIGURATION is False, то инициализируем БД
     # из конфиг. файлов settings.disciplines_path и settings.excel_data_path
