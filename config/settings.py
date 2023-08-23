@@ -1,4 +1,7 @@
-from pydantic_settings import BaseSettings
+"""Модуль с настройками проекта"""
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     DATABASE_NAME: str
@@ -22,7 +25,11 @@ class Settings(BaseSettings):
     def QUEUE_DB_URL(self):
         return f'sqlite:///{self.QUEUE_DB_NAME}.sqlite'
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
+
 
 settings = Settings()
+
+
+if __name__ == "__main__":
+    print(Settings().model_dump())

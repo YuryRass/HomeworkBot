@@ -19,7 +19,7 @@ async def save_test_files(path_to_test: str, downloaded_file: bytes) -> None:
         :return: None
         """
     path = Path.cwd()
-    path = Path(path.joinpath(path_to_test)) # полный путь до тестов
+    path = Path(path.joinpath(path_to_test))  # полный путь до тестов
 
     # удаляем, если они имеютя, все файлы в папке path
     if os.listdir(path):
@@ -31,7 +31,9 @@ async def save_test_files(path_to_test: str, downloaded_file: bytes) -> None:
                 elif os.path.isdir(file_path):
                     rmtree(file_path)
             except Exception as ex:
-                raise DeleteFileException(f'<b>Failed to delete</b> <i>{file_name}</i>. Reason: {ex}')
+                raise DeleteFileException(
+                    f'<b>Failed to delete</b> <i>{file_name}</i>. Reason: {ex}'
+                )
 
     # записываем загруженные данные в архив
     with open(path.joinpath('archive.zip'), "wb") as new_file:
