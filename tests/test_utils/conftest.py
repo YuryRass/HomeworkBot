@@ -1,8 +1,19 @@
 import os
+from datetime import date
 from shutil import rmtree
 from zipfile import ZipFile
-import pytest
 from pathlib import Path
+import pytest
+
+from model.pydantic.discipline_works import (
+    DisciplineWork, DisciplineWorksConfig,
+    DisciplinesConfig
+)
+
+from _json_data_for_tests import (
+    error_disciplines_json, disciplines_json,
+    discipline_works_json, error_discipline_works_json
+)
 
 
 class CheckExistTestFolder:
@@ -51,3 +62,100 @@ class CheckExistTestFolder:
             os.remove(zip_file)
         if os.path.isdir(out_dir):
             rmtree(out_dir)
+
+
+class DisciplinesUtils:
+    @pytest.fixture
+    def disciplines_config(self) -> str:
+        discipline_work: list[DisciplineWork] = [
+            DisciplineWork(
+                number=i+1,
+                amount_tasks=2,
+                deadline=date(2020, 11, 28)
+            ) for i in range(2)
+        ]
+
+        disciplines: list[DisciplineWorksConfig] = [
+            DisciplineWorksConfig(
+                full_name=f'test_discipline_name_{i}',
+                short_name='tdn',
+                path_to_test='any_path',
+                path_to_answer='any_path',
+                language='python',
+                works=discipline_work
+            ) for i in range(3)
+        ]
+
+        disciplines_config: DisciplinesConfig = DisciplinesConfig(
+            disciplines=disciplines
+        )
+
+        return disciplines_config
+
+    @pytest.fixture
+    def json_file_path(self) -> Path:
+        path = Path.cwd().joinpath('tests')
+
+        with open(path.joinpath('config.json'), 'w') as fp:
+            fp.write(disciplines_json)
+        json_file_path = path.joinpath('config.json')
+
+        return json_file_path
+
+    @pytest.fixture
+    def error_json_file_path(self) -> str:
+        path = Path.cwd().joinpath('tests')
+
+        with open(path.joinpath('error_config.json'), 'w') as fp:
+            fp.write(error_disciplines_json)
+        error_json_file_path = path.joinpath('error_config.json')
+
+        return error_json_file_path
+
+    @pytest.fixture
+    def disciplines_json(self) -> str:
+        return disciplines_json
+
+    @pytest.fixture
+    def error_disciplines_json(self) -> str:
+        return error_disciplines_json
+
+    @pytest.fixture
+    def discipline_works_json(self):
+        return discipline_works_json
+
+    @pytest.fixture
+    def error_discipline_works_json(self):
+        return error_discipline_works_json
+
+    @pytest.fixture
+    def discipline_works_config(self) -> str:
+        works: list[DisciplineWork] = [
+            DisciplineWork(
+                number=i+1, amount_tasks=5, deadline=date(2020, 11, 28)
+            ) for i in range(2)
+        ]
+
+        discipline_works_config: DisciplineWorksConfig = DisciplineWorksConfig(
+            full_name='python_programming',
+            short_name='PP',
+            path_to_test='path_to_test',
+            path_to_answer='path_to_answer',
+            language='python',
+            works=works
+        )
+
+        return discipline_works_config
+
+    @pytest.fixture
+    def delete_all_files(self):
+        yield
+        # удаляем все созданные раннее файлы
+        path = Path.cwd().joinpath('tests')
+        config_file = path.joinpath('config.json')
+        error_config_file = path.joinpath('error_config.json')
+
+        if os.path.isfile(config_file):
+            os.remove(config_file)
+        if os.path.isfile(error_config_file):
+            os.remove(error_config_file)
