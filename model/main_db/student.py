@@ -1,23 +1,32 @@
 from dataclasses import dataclass
+from typing import List
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
-from database.main_db import Base
+from database.main_db.database import Base
 
 
 class Student(Base):
     __tablename__ = 'students'
 
-    id = Column(Integer, primary_key=True)
-    full_name = Column(String, nullable=False)
-    group = Column(Integer, ForeignKey('groups.id'), nullable=False)
-    telegram_id = Column(Integer, nullable=True, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    full_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey('groups.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    telegram_id: Mapped[int] = mapped_column(nullable=True, unique=True)
 
-    def __repr__(self) -> str:
-        return f'Student [ID: {self.id}, ФИО: {self.full_name}], ' \
-               f'grID: {self.group}, TgID: {self.telegram_id}]'
+    group: Mapped["Group"] = relationship(
+        back_populates="students"
+    )
 
+    homeworks: Mapped[List["AssignedDiscipline"]] = relationship(
+        back_populates="student", cascade="all, delete, delete-orphan"
+    )
 
-@dataclass
-class StudentRaw:
-    full_name: str
+    def __repr__(self):
+        info: str = f'Студент [ФИО: {self.full_name}, ' \
+                    f'ID группы: {self.group}, Telegram ID: {self.telegram_id}]'
+        return info

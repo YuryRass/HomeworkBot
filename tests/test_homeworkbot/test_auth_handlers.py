@@ -1,0 +1,1 @@
+from homeworkbot.auth_handlers import process_start_command

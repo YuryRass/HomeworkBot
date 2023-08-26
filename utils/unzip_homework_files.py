@@ -44,7 +44,10 @@ async def save_homework_file(
 
     with open(path.joinpath(file_name), "wb") as new_file:
         new_file.write(downloaded_file)
-    with ZipFile(path.joinpath(file_name), "r", metadata_encoding='cp866') as zipObj:
+        
+    with ZipFile(
+        path.joinpath(file_name), "r", metadata_encoding='cp866'
+    ) as zipObj:
         zipObj.extractall(path=path)
 
     filelist = [str(path.joinpath(file.filename)) for file in zipObj.filelist]

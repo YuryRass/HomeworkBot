@@ -10,19 +10,35 @@ from model.pydantic.discipline_works import (
     DisciplinesConfig
 )
 
+from model.pydantic.home_work import (
+    DisciplineHomeWorks, HomeWork, HomeTask
+)
+
+from model.pydantic.db_start_data import StudentRaw, TeacherRaw
+
 from _json_data_for_tests import (
     error_disciplines_json, disciplines_json,
     discipline_works_json, error_discipline_works_json
 )
 
+from _json_data_for_tests import (
+    discipline_home_works_json, error_discipline_home_works_json
+)
 
-class CheckExistTestFolder:
+from utils.excel_parser import ExcelDataParser, ParserType
+
+
+class UnzipTestFiles:
     @pytest.fixture
     def out_dir(self):
         # директория, куда будут помещаться распакованные файлы
         out_dir = 'out'
         out_dir = Path.cwd().joinpath('tests').joinpath(out_dir)
         Path.mkdir(out_dir, parents=True, exist_ok=True)
+
+        # заполняем out_dir временными файлами для тестов
+        Path.mkdir(out_dir.joinpath('temp_dir'), parents=True, exist_ok=True)
+        open(out_dir.joinpath('temp_file'), 'w')
         return out_dir
 
     @pytest.fixture
@@ -159,3 +175,67 @@ class DisciplinesUtils:
             os.remove(config_file)
         if os.path.isfile(error_config_file):
             os.remove(error_config_file)
+
+
+class HomeWorkUtils:
+    @pytest.fixture
+    def discipline_home_works_json(self):
+        return discipline_home_works_json
+
+    @pytest.fixture
+    def error_discipline_home_works_json(self):
+        return error_discipline_home_works_json
+
+    @pytest.fixture
+    def discipline_home_works(self):
+        tasks: list[HomeTask] = [
+            HomeTask(number=i+1) for i in range(5)
+        ]
+
+        discipline_home_works: DisciplineHomeWorks = DisciplineHomeWorks(
+            home_works=[
+                HomeWork(
+                    number=i+1,
+                    deadline="2020-11-28",
+                    tasks=tasks
+                ) for i in range(2)
+            ]
+        )
+
+        return discipline_home_works
+
+
+class ExcelParser:
+    file_path = Path.cwd().joinpath('tests').joinpath(
+        'test_utils'
+    ).joinpath('_teachers_students_data.xlsx')
+
+    @pytest.fixture
+    def students(self):
+        parser: ExcelDataParser = ExcelDataParser(
+            file_path=self.file_path,
+            parse_type=ParserType.STUDENT
+        )
+        return parser.students
+
+    @pytest.fixture
+    def teachers(self):
+        parser: ExcelDataParser = ExcelDataParser(
+            file_path=self.file_path,
+            parse_type=ParserType.TEACHER
+        )
+        return parser.teachers
+
+    @pytest.fixture
+    def teachers_and_students(self) -> tuple[
+        dict[str, dict[str, list[TeacherRaw | StudentRaw]]]
+    ]:
+        parser: ExcelDataParser = ExcelDataParser(
+            file_path=self.file_path,
+            parse_type=ParserType.ALL
+        )
+        return parser.teachers, parser.students
+
+
+class UnzipHomeWorkFiles:
+    ...

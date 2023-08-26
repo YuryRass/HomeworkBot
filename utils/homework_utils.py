@@ -13,7 +13,9 @@ def create_homeworks(discipline: DisciplineWorksConfig) -> DisciplineHomeWorks:
     """
         Создает и возвращает данные по лабораторным работам
     для учебной дисциплины.
+
         Параметры:
+
         discipline (DisciplineWorksConfig): учебная дисциплина.
     """
     # список лабораторных работ
@@ -36,7 +38,9 @@ def homeworks_from_json(json_data: str) -> DisciplineHomeWorks:
     """
         Конвертирует данные по лабораторным работам в pydantic модель
     'Лабораторные работы по учебной дисциплине' и возвращает их.
+
         Параметры:
+
         json_data (str): данные по лабораторным работам в JSON формате
     """
     data = json.loads(json_data)

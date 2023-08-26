@@ -163,3 +163,159 @@ error_discipline_works_json: str = '''{
         }
     ]
 }'''
+
+
+discipline_home_works_json: str = '''{
+    "home_works": [
+        {
+            "number": 1,
+            "deadline": "2020-11-28",
+            "tasks": [
+                {
+                    "number": 1,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 2,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 3,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 4,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 5,
+                    "is_done": false,
+                    "amount_tries": 0
+                }
+            ],
+            "is_done": false,
+            "tasks_completed": 0
+        },
+        {
+            "number": 2,
+            "deadline": "2020-11-28",
+            "tasks": [
+                {
+                    "number": 1,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 2,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 3,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 4,
+                    "is_done": false,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 5,
+                    "is_done": false,
+                    "amount_tries": 0
+                }
+            ],
+            "is_done": false,
+            "tasks_completed": 0
+        }
+    ]
+}'''
+
+
+error_discipline_home_works_json: str = '''{
+    "home_works": [
+        {
+            "ERROR": 1,
+            "deadline": "ERROR",
+            "tasks": [
+                {
+                    "number": 1,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 2,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 3,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 4,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 5,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                }
+            ],
+            "is_done": false,
+            "tasks_completed": 0,
+            "end_time": null
+        },
+        {
+            "number": 2,
+            "deadline": "2020-11-28",
+            "tasks": [
+                {
+                    "number": 1,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 2,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 3,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 4,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                },
+                {
+                    "number": 5,
+                    "is_done": false,
+                    "last_try_time": null,
+                    "amount_tries": 0
+                }
+            ],
+            "is_done": false,
+            "tasks_completed": 0,
+            "end_time": null
+        }
+    ]
+}'''

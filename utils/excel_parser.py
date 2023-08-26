@@ -8,8 +8,7 @@ import openpyxl
 from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from model.main_db.teacher import TeacherRaw
-from model.main_db.student import StudentRaw
+from model.pydantic.db_start_data import StudentRaw, TeacherRaw
 
 
 class ExcelDataParserError(Exception):
@@ -55,14 +54,18 @@ class ExcelDataParser:
     def students(self) -> dict[str, dict[str, list[StudentRaw]]]:
         """Возвращает словарь с данными о студентах"""
         if self.__parse_type == ParserType.TEACHER:
-            raise ExcelDataParserError("Students data don't with this ParseType")
+            raise ExcelDataParserError(
+                "Students data don't with this ParseType"
+            )
         return self.__student
 
     @property
     def teachers(self) -> dict[str, dict[str, list[TeacherRaw]]]:
         """Возвращает словарь с данными о преподах"""
         if self.__parse_type == ParserType.STUDENT:
-            raise ExcelDataParserError("Teachers data don't with this ParseType")
+            raise ExcelDataParserError(
+                "Teachers data don't with this ParseType"
+            )
         return self.__teacher
 
     def __load_data(self, file_path: str, parse_type: ParserType) -> None:
@@ -96,7 +99,7 @@ class ExcelDataParser:
             case ParserType.TEACHER:
                 index = wb.sheetnames.index('teachers')
                 wb.active = index
-                self.__students_parser(wb.active)
+                self.__teachers_parser(wb.active)
             case _:
                 raise ExcelDataParserError('ParserType not found')
 

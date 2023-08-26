@@ -26,7 +26,6 @@ from model.pydantic.discipline_works import DisciplineWorksConfig
 from model.pydantic.students_group import StudentsGroup
 from model.pydantic.db_start_data import DbStartData
 
-from utils.disciplines_utils import disciplines_works_from_json
 from utils.homework_utils import create_homeworks, homeworks_to_json
 from utils.disciplines_utils import (
     disciplines_works_from_json,
@@ -148,6 +147,7 @@ def assign_teacher_to_group(teacher_id: int, group_id: int) -> None:
         session.add(TeacherGroup(teacher_id=teacher_id, group_id=group_id))
         session.commit()
 
+
 def get_all_groups() -> list[Group]:
     """
         Возвращает список всех учебных групп.
@@ -191,6 +191,7 @@ def add_student(full_name: str, group_id: int, discipline_id: int):
     session.commit()
     session.close()
 
+
 def add_discipline(discipline: DisciplineWorksConfig) -> None:
     """
         Добавление дисциплины в таблицу Discipline
@@ -221,10 +222,11 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
 
         Исключения:
         DisciplineNotFoundException: дисциплина не найдена.
-        GroupAlreadyExistException: если группа с таким названием уже существует.
+        GroupAlreadyExistException: если группа с таким названием
+        уже существует.
     """
     session = Session()
-    session.begin() # начало транзакции
+    session.begin()  # начало транзакции
     try:
         for it in student_groups:
             # добавляем группы
@@ -233,7 +235,11 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
             session.flush()
 
             # добавялем студентов
-            students = [Student(full_name=student_raw, group=group.id) for student_raw in it.students]
+            students = [
+                Student(
+                    full_name=student_raw, group=group.id
+                ) for student_raw in it.students
+            ]
             session.add_all(students)
             session.flush()
 
@@ -243,8 +249,9 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
                     Discipline.short_name.ilike(f"%{discipline}%")
                 ).first()
                 if current_discipline is None:
-                    raise DisciplineNotFoundException('К сожалению, дисциплины '
-                                                      f'"{discipline}" нет в БД 😒')
+                    raise DisciplineNotFoundException(
+                        f'К сожалению, дисциплины "{discipline}" нет в БД 😒'
+                    )
 
                 empty_homework = create_homeworks(
                     disciplines_works_from_json(current_discipline.works)
@@ -256,7 +263,7 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
                         home_work=homeworks_to_json(empty_homework)
                     ) for student in students]
                 )
-        session.commit() # сохраняем изменения
+        session.commit()  # сохраняем изменения
 
     except DisciplineNotFoundException as ex:
         session.rollback()
@@ -278,8 +285,13 @@ def assign_teacher_to_discipline(teacher_id: int, discipline_id: int) -> None:
     """
 
     with Session() as session:
-        session.add(TeacherDiscipline(teacher_id=teacher_id, discipline_id=discipline_id))
+        session.add(
+            TeacherDiscipline(
+                teacher_id=teacher_id, discipline_id=discipline_id
+            )
+        )
         session.commit()
+
 
 def get_not_assign_teacher_disciplines(teacher_id: int) -> list[Discipline]:
     """Получить список учебных дисциплин, не назначенных преподу.
@@ -303,6 +315,7 @@ def get_not_assign_teacher_disciplines(teacher_id: int) -> list[Discipline]:
 
         return not_assign_teacher_disciplines
 
+
 def delete_group(group_id: int) -> None:
     """Осуществялет удаление учебной группы по её ID из основной БД.
 
@@ -322,7 +335,9 @@ def delete_group(group_id: int) -> None:
         ).delete(synchronize_session='fetch')
 
         # список студентов, обучающихся в данной группе
-        students = session.query(Student).filter(Student.group == group_id).all()
+        students = session.query(Student).filter(
+            Student.group == group_id
+        ).all()
 
         # если список студентов пуст, то завершение
         if not students:
@@ -341,7 +356,9 @@ def delete_group(group_id: int) -> None:
 
         # В конце удаляем полученных студентов с такими же ID
         # из родительской таблицы Student
-        session.query(Student).filter(Student.group == group_id).delete(synchronize_session='fetch')
+        session.query(Student).filter(Student.group == group_id).delete(
+            synchronize_session='fetch'
+        )
 
         session.commit()
 
@@ -357,7 +374,9 @@ def delete_student(student_id: int) -> None:
         # где фигурируют записи с ID студента = student_id.
         # Т.е. из таблиц Student и AssignedDiscipline.
 
-        session.query(Student).filter(Student.id == student_id).delete(synchronize_session='fetch')
+        session.query(Student).filter(Student.id == student_id).delete(
+            synchronize_session='fetch'
+        )
         session.query(AssignedDiscipline).filter(
             AssignedDiscipline.student_id == student_id
         ).delete(synchronize_session='fetch')
@@ -389,6 +408,7 @@ def delete_teacher(teacher_id: int) -> None:
 
         session.commit()
 
+
 def get_all_disciplines() -> list[Discipline]:
     """Возвращает список всех дисциплин, которые имеются в таблице.
 
@@ -411,143 +431,109 @@ def get_discipline(discipline_id: int) -> Discipline:
     with Session() as session:
         return session.query(Discipline).get(discipline_id)
 
+
 def remote_start_db_fill(data: DbStartData) -> None:
     """
     Функция для стартовой конфигурации системы через загрузку json-файла
 
-    :param data: данные по предметам, студентам, группам и преподавателям, а также
-    какие дисциплины кому назначены и какой преподаватель их ведет
+    :param data: данные по предметам, студентам, группам и преподавателям,
+    а также какие дисциплины кому назначены и какой преподаватель их ведет
 
     :raises DisciplineNotFoundException: дисциплина не найдена
-    :raises DisciplineAlreadyExistException: дисциплина уже существует (дублируется)
-    :raises GroupAlreadyExistException: если группа с таким названием уже существует
+    :raises DisciplineAlreadyExistException: дисциплина уже существует
+    :raises GroupAlreadyExistException: если группа с таким названием
+    уже существует
     :raises GroupNotFoundException: если группа с таким названием не найдена
 
     :return: None
     """
     session = Session()
-    session.begin() # НАЧАЛО транзакции
-
-    # Tg ID админа по-умолчанию. Используется для сравнения
-    # с другим ID, который передается в стартовой конфигурации
+    session.begin()
     admin_default_tg = settings.DEFAULT_ADMIN
-    dis_short_names, groups_name = {}, {}
+    disciplines: dict[str, Discipline] = {}
+    groups: dict[str, Group] = {}
 
     try:
-        # добавление дисципли
         for discipline in data.disciplines:
-            # проверка на повтор имен дисциплин
-            if discipline.short_name in dis_short_names:
-                raise DisciplineAlreadyExistException(f"{discipline.short_name} дублируется")
-
-            # инициализируем дисциплину
-            dis = Discipline(
-                    full_name=discipline.full_name,
-                    short_name=discipline.short_name,
-                    path_to_test=discipline.path_to_test,
-                    path_to_answer=discipline.path_to_answer,
-                    works=disciplines_works_to_json(discipline),
-                    language=discipline.language,
-                    max_tasks=counting_tasks(discipline),
-                    max_home_works=len(discipline.works)
+            if discipline.short_name in disciplines:
+                raise DisciplineAlreadyExistException(
+                    f"{discipline.short_name} дублируется"
                 )
+            dis = Discipline(
+                full_name=discipline.full_name,
+                short_name=discipline.short_name,
+                path_to_test=discipline.path_to_test,
+                path_to_answer=discipline.path_to_answer,
+                works=disciplines_works_to_json(discipline),
+                language=discipline.language,
+                max_tasks=counting_tasks(discipline),
+                max_home_works=len(discipline.works)
+            )
+            disciplines[discipline.short_name] = dis
 
-            # добавляем ДИСЦИПЛИНУ в таблицу
-            session.add(dis)
+        session.add_all(disciplines.values())
+        session.flush()
 
-            # присваиваем ID дисциплинам
-            session.flush()
-
-            # добавляем имя дисицплины в словарь
-            dis_short_names[discipline.short_name] = dis.id
-
-        # добавление учебных групп
         for it in data.groups:
-            group = Group(group_name=it.group_name)
-            session.add(group)
-            session.flush()
-            groups_name[it.group_name] = group.id
+            group = Group(
+                group_name=it.group_name,
+                students=[
+                    Student(full_name=student_raw)
+                    for student_raw in it.students
+                ]
+            )
+            groups[it.group_name] = group
 
-            students = [
-                Student(
-                    full_name=student_raw,
-                    group=group.id)
-                for student_raw in it.students
-            ]
-            session.add_all(students)
-            session.flush()
-
-            # проверяем, чтобы учебные дисциплины, находящиеся
-            # в data.groups были и в таблице Discipline
-            for discipline in it.disciplines_short_name:
-                current_discipline = session.query(Discipline).filter(
-                    Discipline.short_name.ilike(f"%{discipline}%")
-                ).first()
-                if current_discipline is None:
-                    raise DisciplineNotFoundException(f'{discipline} нет в БД')
+            for name in it.disciplines_short_name:
+                if name not in disciplines:
+                    raise DisciplineNotFoundException(f'{name} нет в БД')
 
                 empty_homework = create_homeworks(
-                    disciplines_works_from_json(current_discipline.works)
+                    disciplines_works_from_json(disciplines[name].works)
+                )
+                disciplines[name].groups.append(
+                    groups[it.group_name]
                 )
 
-                # назначаем студентам дисциплины
-                session.add_all([
-                    AssignedDiscipline(
-                        student_id=student.id,
-                        discipline_id=current_discipline.id,
-                        home_work=homeworks_to_json(empty_homework)
-                    ) for student in students]
-                )
+                for student in groups[it.group_name].students:
+                    student.homeworks.append(
+                        AssignedDiscipline(
+                            discipline_id=disciplines[name].id,
+                            home_work=homeworks_to_json(empty_homework)
+                        )
+                    )
 
-        # добавляем преподов
         for it in data.teachers:
             teacher = Teacher(
                 full_name=it.full_name,
                 telegram_id=it.telegram_id
             )
-            session.add(teacher)
-            session.flush()
 
-            # назначаем учебные группы преподам
             for tgr in it.assign_groups:
-                if tgr not in groups_name:
+                if tgr not in groups:
                     raise GroupNotFoundException(f'Группа {tgr} не найдена')
-                session.add(
-                    TeacherGroup(
-                        teacher_id=teacher.id,
-                        group_id=groups_name[tgr]
-                    )
-                )
+                teacher.groups.append(groups[tgr])
 
-            # назначаем дисциплины преподам
             for tdis in it.assign_disciplines:
-                if tdis not in dis_short_names:
-                    raise DisciplineNotFoundException(f'Дисциплина {tdis} не найдена')
-                session.add(
-                    TeacherDiscipline(
-                        teacher_id=teacher.id,
-                        discipline_id=dis_short_names[tdis]
+                if tdis not in disciplines:
+                    raise DisciplineNotFoundException(
+                        f'Дисциплина {tdis} не найдена'
                     )
-                )
+                teacher.disciplines.append(disciplines[tdis])
 
-            # если препод может быть админом и его ID != admin_default_tg,
-            # то добавляем преподский telegram_id в таблицу Admin
             if it.is_admin and teacher.telegram_id != admin_default_tg:
                 session.add(
                     Admin(
                         telegram_id=teacher.telegram_id
                     )
                 )
+            session.add(teacher)
 
-        # Добавляем номера чатов
         for chat in data.chats:
             session.add(
                 Chat(chat_id=chat)
             )
-
-        # сохраняем все изменения в БД
         session.commit()
-
     except DisciplineNotFoundException as ex:
         session.rollback()
         raise ex
@@ -562,6 +548,7 @@ def remote_start_db_fill(data: DbStartData) -> None:
         raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
     finally:
         session.close()
+
 
 def switch_admin_mode_to_teacher(admin_id: int) -> None:
     """Функция переключает с режима админа на режим препода.
