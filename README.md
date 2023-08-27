@@ -330,7 +330,7 @@
 > Если часть отправленных файлов не проходят на тестирование, студент оповещается
 > об этом, как показано на рисунке ниже.
 
-![](./readme_images/rejected_student_files.png)
+![](./readme_images/rejected_students_files.png)
 
 # Требования к тестам
 
