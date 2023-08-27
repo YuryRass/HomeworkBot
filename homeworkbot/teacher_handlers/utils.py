@@ -1,10 +1,9 @@
 """Модуль реализует вспомогательные инструменты, необходимые перподу"""
 
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.main_db import teacher_crud
-from homeworkbot import bot
 
 
 async def create_teacher_groups_button(message: Message, callback_prefix: str):
@@ -34,7 +33,9 @@ async def create_teacher_groups_button(message: Message, callback_prefix: str):
     )
 
 
-async def create_teacher_discipline_button(message: Message, callback_prefix: str):
+async def create_teacher_discipline_button(
+    message: Message, callback_prefix: str
+):
     """Функция отображает список учебных дисциплин, которые ведёт препод.
 
     Args:

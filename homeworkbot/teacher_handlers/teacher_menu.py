@@ -13,14 +13,14 @@ from database.main_db import teacher_crud
 from database.main_db.admin_crud import is_admin
 
 import homeworkbot.admin_handlers.admin_menu as admin_keyboard
-from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
+from homeworkbot.admin_handlers.unban_student import \
+    create_unban_student_buttons
 from homeworkbot.teacher_handlers.utils import \
     create_teacher_groups_button, create_teacher_discipline_button
 
 
 from homeworkbot.routers import teacher_menu_router
 from homeworkbot.filters import IsOnlyTeacherCommands
-from homeworkbot import bot
 
 
 class TeacherException(Exception):
@@ -50,7 +50,9 @@ __teacher_commands = {
 }
 
 
-def create_teacher_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup:
+def create_teacher_keyboard(
+    message: Message | None = None
+) -> ReplyKeyboardMarkup:
     """Функция создает главную клавиатуру препода.
 
     Args:
@@ -61,17 +63,27 @@ def create_teacher_keyboard(message: Message | None = None) -> ReplyKeyboardMark
     """
     menu_kb: ReplyKeyboardBuilder = ReplyKeyboardBuilder()
     menu_kb.row(
-        KeyboardButton(text=__teacher_commands[TeacherCommand.DOWNLOAD_ANSWER]),
-        KeyboardButton(text=__teacher_commands[TeacherCommand.DOWNLOAD_FINISH_REPORT]),
+        KeyboardButton(
+            text=__teacher_commands[TeacherCommand.DOWNLOAD_ANSWER]
+        ),
+        KeyboardButton(
+            text=__teacher_commands[TeacherCommand.DOWNLOAD_FINISH_REPORT]
+        ),
         width=2
     )
     menu_kb.row(
-        KeyboardButton(text=__teacher_commands[TeacherCommand.DOWNLOAD_FULL_REPORT]),
-        KeyboardButton(text=__teacher_commands[TeacherCommand.DOWNLOAD_SHORT_REPORT]),
+        KeyboardButton(
+            text=__teacher_commands[TeacherCommand.DOWNLOAD_FULL_REPORT]
+        ),
+        KeyboardButton(
+            text=__teacher_commands[TeacherCommand.DOWNLOAD_SHORT_REPORT]
+        ),
         width=2
     )
     menu_kb.row(
-        KeyboardButton(text=__teacher_commands[TeacherCommand.INTERACTIVE_REPORT]),
+        KeyboardButton(
+            text=__teacher_commands[TeacherCommand.INTERACTIVE_REPORT]
+        ),
         width=1
     )
 
@@ -82,7 +94,9 @@ def create_teacher_keyboard(message: Message | None = None) -> ReplyKeyboardMark
 
     if is_admin(message.from_user.id):
         footer_buttons.append(
-            KeyboardButton(text=__teacher_commands[TeacherCommand.SWITCH_TO_ADMIN])
+            KeyboardButton(
+                text=__teacher_commands[TeacherCommand.SWITCH_TO_ADMIN]
+            )
         )
     menu_kb.row(*footer_buttons)
     return menu_kb.as_markup()
@@ -95,7 +109,7 @@ async def handle_commands(message: Message, state: FSMContext):
     Args:
         message (Message): Tg-сообщение.
     """
-    await state.clear() # убираем предыдущие состояния.
+    await state.clear()  # убираем предыдущие состояния.
 
     command = get_current_teacher_command(message.text)
 

@@ -6,8 +6,10 @@ from pathlib import Path
 
 from utils.disciplines_utils import *
 from utils.homework_utils import *
-from utils.excel_parser import ExcelDataParserError
+from utils.excel_parser import ExcelDataParser
 from model.pydantic.db_start_data import StudentRaw, TeacherRaw
+from model.pydantic.discipline_works import DisciplineWorksConfig
+from model.pydantic.home_work import DisciplineHomeWorks
 
 
 class FirstRunConfigurator:

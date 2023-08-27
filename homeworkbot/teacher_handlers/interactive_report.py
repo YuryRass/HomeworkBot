@@ -9,7 +9,6 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.main_db import teacher_crud
-from homeworkbot import bot
 from homeworkbot.routers import common_router
 from model.pydantic.student_report import StudentReport
 from reports.interactive_report_builder import run_interactive_report_builder
@@ -48,7 +47,9 @@ async def callback_interactive_report(call: CallbackQuery):
                 group_id
             )
             if len(disciplines) == 0:
-                await call.message.edit_text(text="За группой не числится дисциплин")
+                await call.message.edit_text(
+                    text="За группой не числится дисциплин"
+                )
             else:
                 disciplines_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
                 disciplines_kb.row(
@@ -109,16 +110,19 @@ async def __create_report(
     )
 
     report = await asyncio.gather(
-        asyncio.to_thread(run_interactive_report_builder, student_id, discipline_id)
+        asyncio.to_thread(
+            run_interactive_report_builder, student_id, discipline_id
+        )
     )
 
     student_report: StudentReport = report[0]
 
-    text_report = f'<i>Студент</i>: <b>{student_report.full_name}</b>\n'
-    text_report += f'<i>Кол-во баллов</i>: {student_report.points}\n'
-    text_report += f'<i>Пропущенных дедлайнов</i>: {student_report.deadlines_fails}\n'
-    text_report += f'<i>Полностью выполнено лаб</i>: {student_report.lab_completed}\n'
-    text_report += f'<i>Выполнено заданий</i>: {student_report.task_completed}\n'
-    text_report += f'<i>Task ratio</i>: {student_report.task_ratio}\n'
+    text_report = \
+        f'<i>Студент</i>: <b>{student_report.full_name}</b>\n' + \
+        f'<i>Кол-во баллов</i>: {student_report.points}\n' + \
+        f'<i>Пропущенных дедлайнов</i>: {student_report.deadlines_fails}\n' + \
+        f'<i>Полностью выполнено лаб</i>: {student_report.lab_completed}\n' + \
+        f'<i>Выполнено заданий</i>: {student_report.task_completed}\n' + \
+        f'<i>Task ratio</i>: {student_report.task_ratio}\n'
 
     await call.message.edit_text(text=text_report)

@@ -15,6 +15,7 @@ from homeworkbot.routers import (
     student_menu_router, student_router
 )
 
+
 def include_routers_in_dispatcher(dispatcher: Dispatcher) -> None:
     """Функция регистриурет роутеры в диспетчере.
 

@@ -99,7 +99,9 @@ async def process_start_command(message: Message):
             chats = common_crud.get_chats()
             user_in_chat = False
             for chat_id in chats:
-                user_in_chat = await is_subscribed(chat_id, message.from_user.id)
+                user_in_chat = await is_subscribed(
+                    chat_id, message.from_user.id
+                )
                 if user_in_chat:
                     break
 
@@ -108,23 +110,33 @@ async def process_start_command(message: Message):
                 yes_or_no_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
                 yes_or_no_kb.row(
                     InlineKeyboardButton(
-                        text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_YES],
-                        callback_data=bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK]
+                        text=bot_auth_messages[
+                            BotAuthUsers.STUDENT_BUTTON_YES
+                        ], callback_data=bot_auth_callbacks[
+                            BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK
+                        ]
                     ),
                     InlineKeyboardButton(
                         text=bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_NO],
-                        callback_data=bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK]
+                        callback_data=bot_auth_callbacks[
+                            BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK
+                        ]
                     ),
                     width=2
                 )
 
-                # запрос разрешения у студента на обработку его персональных данных
+                # запрос разрешения у студента на обработку его ПД
                 await message.answer(
-                    text=bot_auth_messages[BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST],
+                    text=bot_auth_messages[
+                        BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST
+                    ],
                     reply_markup=yes_or_no_kb.as_markup(),
                 )
             else:
-                await message.answer(text=bot_auth_messages[BotAuthUsers.TG_USER_NOT_IN_CHAT],)
+                await message.answer(text=bot_auth_messages[
+                    BotAuthUsers.TG_USER_NOT_IN_CHAT
+                ],)
+
 
 @auth_router.callback_query(
     lambda call: call.data in [
@@ -141,19 +153,27 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
     match type_callback:
         case 'start':
             # положит. ответ от tg-пользователя
-            if call.data == bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK]:
+            if call.data == bot_auth_callbacks[
+                BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK
+            ]:
                 # Устанавливаем состояние ожидания ввода ФИО
                 await state.set_state(state=AuthStates.full_name)
 
                 # сообщени еот бота, чтобы пользователь ввел свои ФИО
                 await call.message.edit_text(
-                    text=bot_auth_messages[BotAuthUsers.BOT_MESSAGE_FOR_INPUT_STUDENT_FULL_NAME]
+                    text=bot_auth_messages[
+                        BotAuthUsers.BOT_MESSAGE_FOR_INPUT_STUDENT_FULL_NAME
+                    ]
                 )
 
             # отриц. ответ от tg-пользователя
-            if call.data == bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK]:
+            if call.data == bot_auth_callbacks[
+                BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK
+            ]:
                 await call.message.edit_text(
-                    text=bot_auth_callbacks[BotAuthUsers.BOT_ANSWER_ON_STUDENT_DISAGREEMENT],
+                    text=bot_auth_callbacks[
+                        BotAuthUsers.BOT_ANSWER_ON_STUDENT_DISAGREEMENT
+                    ],
                 )
         case _:
             # неизвестный коллбэк-данные

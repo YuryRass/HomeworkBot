@@ -7,7 +7,8 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from homeworkbot.routers import student_menu_router
 from homeworkbot.filters import IsOnlyStudentCommands
-from homeworkbot.student_handlers.utils import create_student_disciplines_button
+from homeworkbot.student_handlers.utils import \
+    create_student_disciplines_button
 
 
 class StudentException(Exception):
@@ -16,9 +17,10 @@ class StudentException(Exception):
 
 class StudentCommand(Enum):
     """Команды студента"""
+
+    ACADEMIC_PERFORMANCE = auto()
     UPLOAD_ANSWER = auto()
     NEAREST_DEADLINE = auto
-    ACADEMIC_PERFORMANCE = auto()
 
 
 __student_commands = {

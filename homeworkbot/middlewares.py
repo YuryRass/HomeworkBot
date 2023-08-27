@@ -28,10 +28,11 @@ class BanMiddleware(BaseMiddleware):
 
         # если студент - в бан-листе.
         await event.answer(
-                f'Функциональность бота недоступна, вы в бан-листе!!! '
-                f'Для разблокировки обратитесь к своему преподавателю!'
+                text='Функциональность бота недоступна, вы в бан-листе!!!\n' +
+                'Для разблокировки обратитесь к своему преподавателю!'
             )
         return
+
 
 class FloodMiddlewareState(Enum):
     """Класс состояний по загрузке ответов студентами"""
@@ -42,20 +43,24 @@ class FloodMiddlewareState(Enum):
     # одидание загрузки ответов студентом
     WAIT_UPLOAD_ANSWER = auto()
 
+
 class StudentFloodMiddleware(BaseMiddleware):
     """
     Класс промежуточного ПО, внедряемого в бота для лимитирования запросов
-    студентов на загрузку ответов на л/р (д/р) и команд на проверку успеваимости
+    студентов на загрузку ответов на л/р (д/р) и команд на проверку
+    успеваимости
     """
     def __init__(self, load_answers_limit: int, commands_limit: int) -> None:
         """
-        :param load_answers_limit: ограничение (в минутах) на период загрузки ответов
-        :param commands_limit: ограничение (в минутах) на период запросов данных об успеваимости
+        :param load_answers_limit: ограничение (в минутах) на период загрузки
+        ответов
+        :param commands_limit: ограничение (в минутах) на период запросов
+        данных об успеваимости
 
         :return:
         """
 
-        self.last_answer_time = {} # время последней зарузки ответов студентом
+        self.last_answer_time = {}  # время последней зарузки ответов студентом
 
         # время последнего запроса данных об успеваимости студента
         self.last_command_time = {}
@@ -78,10 +83,13 @@ class StudentFloodMiddleware(BaseMiddleware):
         data: Dict[str, Any]
     ) -> Any:
         if student_crud.is_student(event.from_user.id):
-            if event.text in ['Ближайший дедлайн', 'Успеваимость', 'Загрузить ответ']:
+            if event.text in [
+                'Ближайший дедлайн', 'Успеваимость', 'Загрузить ответ'
+            ]:
                 if (not event.from_user.id in self.last_answer_time and
                         event.text == 'Загрузить ответ'):
-                    self.state[event.from_user.id] = FloodMiddlewareState.WAIT_UPLOAD_ANSWER
+                    self.state[event.from_user.id] = \
+                        FloodMiddlewareState.WAIT_UPLOAD_ANSWER
                     self.last_answer_time[event.from_user.id] = event.date
                     return await handler(event, data)
 
@@ -90,8 +98,10 @@ class StudentFloodMiddleware(BaseMiddleware):
                     self.last_command_time[event.from_user.id] = event.date
                     return await handler(event, data)
 
-                is_not_success = False # флаг доступа студента
-                last_time = 0 # время, через котрое можно будет обратиться к боту студенту
+                is_not_success = False  # флаг доступа студента
+
+                # время, через котрое можно будет обратиться к боту студенту
+                last_time = 0
 
                 match event.text:
                     case 'Загрузить ответ':
@@ -101,7 +111,8 @@ class StudentFloodMiddleware(BaseMiddleware):
                             last_time -= event.date - self.last_answer_time[event.from_user.id]
                             is_not_success = True
                         else:
-                            self.state[event.from_user.id] = FloodMiddlewareState.WAIT_UPLOAD_ANSWER
+                            self.state[event.from_user.id] = \
+                                FloodMiddlewareState.WAIT_UPLOAD_ANSWER
                             self.last_answer_time[event.from_user.id] = event.date
                             return await handler(event, data)
                     case _:
