@@ -42,7 +42,7 @@ def is_admin_no_teacher_mode(telegram_id: int) -> bool:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
     with Session() as session:
-        admin = session.query(Admin).get(telegram_id)
+        admin = session.get(Admin, telegram_id)
         if admin is None:
             return False
         return not admin.teacher_mode
@@ -56,7 +56,7 @@ def is_admin_with_teacher_mode(telegram_id: int) -> bool:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
     with Session() as session:
-        admin = session.query(Admin).get(telegram_id)
+        admin = session.get(Admin, telegram_id)
         if admin is None:
             return False
         return admin.teacher_mode
@@ -69,7 +69,7 @@ def is_admin(telegram_id: int) -> bool:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
     with Session() as session:
-        admin = session.query(Admin).get(telegram_id)
+        admin = session.get(Admin, telegram_id)
         return admin is not None
 
 

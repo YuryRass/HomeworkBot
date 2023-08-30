@@ -65,6 +65,10 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
             return False
 
 
+async def start(message: Message):
+    return await message.answer(text='Hello')
+
+
 @auth_router.message(CommandStart())
 async def process_start_command(message: Message):
     """

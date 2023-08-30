@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     FLOOD_MIDDLEWARE: bool
     AMOUNT_DOKER_RUN: int
 
+    MODE: str
+
     @property
     def MAIN_DB_URL(self):
         return f'sqlite:///{self.DATABASE_NAME}.sqlite'

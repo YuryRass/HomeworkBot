@@ -41,7 +41,7 @@ def user_verification(telegram_id: int) -> UserEnum:
     """
     with Session() as session:
         # проверка на админа
-        user = session.query(Admin).get(telegram_id)
+        user = session.get(Admin, telegram_id)
         if user is not None:
             return UserEnum.Admin
 
