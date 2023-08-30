@@ -1,78 +1,134 @@
 import pytest
-import datetime
-from aiogram.types import Message, Update, Chat, User
-from aiogram import Bot, Dispatcher
-from unittest.mock import AsyncMock
-from homeworkbot.auth_handlers import process_start_command, auth_router, is_subscribed
+from aiogram.types import (
+    Message, Update, User, ChatMemberMember, ChatMemberLeft
+)
+from aiogram import Dispatcher
+from homeworkbot.auth_handlers import auth_router, is_subscribed
 from homeworkbot.lexicon import bot_auth_messages, BotAuthUsers
 from homeworkbot.admin_handlers import admin_keyboard
 from homeworkbot.teacher_handlers.teacher_menu import create_teacher_keyboard
 from database.main_db.admin_crud import add_chat
 
-from aiogram.methods import GetChatMember, Request
-from aiogram.types import ChatMember, ChatMemberOwner, ChatMemberLeft, User
+from aiogram.methods import GetChatMember, SendMessage
+from aiogram.methods.base import TelegramType
 
+from tests.test_homeworkbot.conftest import AuthHandlers, TelegramChat
 
-
-from confest import AuthHandlers, TelegramChat
+from homeworkbot.configuration import bot
 
 
 class TestAuthHandlers(AuthHandlers):
     @pytest.mark.asyncio
+    async def test_is_subscribed(self):
+        # Случай, когда пользователь покинул чат:
+        bot.add_result_for(
+            method=GetChatMember,
+            ok=True,
+            result=ChatMemberLeft(
+                user=User(
+                    id=TelegramChat.STUDENT_ID, is_bot=False, first_name="User"
+                ),
+            )
+        )
+        user_in_chat: bool = await is_subscribed(
+            chat_id=TelegramChat.ID, user_id=TelegramChat.STUDENT_ID
+        )
+        assert not user_in_chat
+
+        # Случай, когда пользователь есть в чате
+        bot.add_result_for(
+            method=GetChatMember,
+            ok=True,
+            result=ChatMemberMember(
+                user=User(
+                    id=TelegramChat.STUDENT_ID, is_bot=False, first_name="User"
+                ),
+            )
+        )
+        user_in_chat: bool = await is_subscribed(
+            chat_id=TelegramChat.ID, user_id=TelegramChat.STUDENT_ID
+        )
+        assert user_in_chat
+
+        # TODO: протестировать еще исключение
+
+    @pytest.mark.asyncio
     async def test_process_start_command(
-        self, messages: tuple[Message], bot: Bot, dispatcher: Dispatcher
+        self, messages: tuple[Message], dispatcher: Dispatcher
     ):
         dispatcher.include_router(auth_router)
 
         admin_msg, teacher_msg, user_not_in_chat_msg, \
             unregistred_student_msg = messages
 
+        for _ in range(3):
+            bot.add_result_for(
+                method=SendMessage,
+                ok=True
+            )
         # Ответ для админа
-        result = await dispatcher.feed_update(
+        await dispatcher.feed_update(
             bot=bot, update=Update(update_id=187, message=admin_msg)
         )
-        assert result.text == bot_auth_messages[BotAuthUsers.ADMIN_AUTH_ANSWER]
-        assert result.reply_markup == admin_keyboard(admin_msg)
 
-        # Ответ для препода
-        result = await dispatcher.feed_update(
+        outgoing_message: TelegramType = bot.session.get_request()
+        assert isinstance(outgoing_message, SendMessage)
+        assert outgoing_message.text == \
+            bot_auth_messages[BotAuthUsers.ADMIN_AUTH_ANSWER]
+        assert outgoing_message.reply_markup == admin_keyboard(admin_msg)
+
+        # # Ответ для препода
+        await dispatcher.feed_update(
             bot=bot, update=Update(update_id=188, message=teacher_msg)
         )
-        assert result.text == bot_auth_messages[BotAuthUsers.TEACHER_AUTH_ANSWER]
-        assert result.reply_markup == create_teacher_keyboard(teacher_msg)
+        outgoing_message: TelegramType = bot.session.get_request()
+        assert isinstance(outgoing_message, SendMessage)
+        assert outgoing_message.text == \
+            bot_auth_messages[BotAuthUsers.TEACHER_AUTH_ANSWER]
+        assert outgoing_message.reply_markup == \
+            create_teacher_keyboard(teacher_msg)
 
         # Ответ для пользователя, которого нет в чате
-        result = await dispatcher.feed_update(
+        await dispatcher.feed_update(
             bot=bot, update=Update(update_id=189, message=user_not_in_chat_msg)
         )
-        assert result.text == bot_auth_messages[BotAuthUsers.TG_USER_NOT_IN_CHAT]
+        outgoing_message: TelegramType = bot.session.get_request()
+        assert isinstance(outgoing_message, SendMessage)
+        assert outgoing_message.text == \
+            bot_auth_messages[BotAuthUsers.TG_USER_NOT_IN_CHAT]
 
-        # теперь ответ для студента, который есть в чате, но не прошел аутентификацию
+        # Теперь ответ для студента, который есть в чате,
+        # но не прошел аутентификацию
 
-        # добавялем ID чата в БД
+        # добавляем номер чата в БД
         add_chat(TelegramChat.ID)
 
-        # делаем ложный ответ от бота для функции get_chat_member()
-        # Чтобы студент с id = TelegramChat.STUDENT_ID появился в чате
-        # prepare_result = bot.add_result_for(
-        #     GetChatMember,
-        #     ok=True,
-        #     result=ChatMemberOwner(
-        #         user=User(
-        #             id=TelegramChat.STUDENT_ID, is_bot=False, first_name="Test"
-        #         ),
-        #         is_anonymous=False
-        #     ),
-        # )
-
-        res = await is_subscribed(TelegramChat.ID, TelegramChat.STUDENT_ID)
-
-
-        # # Ответ для незареганного студента
-        result = await dispatcher.feed_update(
-            bot=bot, update=Update(update_id=190, message=unregistred_student_msg)
+        # даем mocked-боту право на отправку сообщения
+        bot.add_result_for(
+            method=SendMessage,
+            ok=True
         )
 
-        #request = bot.session.get_request()
-        #assert result.text == bot_auth_messages[BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST]
-        #assert result.reply_markup == create_teacher_keyboard(teacher_msg)
+        # подписываем студента на канал
+        bot.add_result_for(
+            method=GetChatMember,
+            ok=True,
+            result=ChatMemberMember(
+                user=User(
+                    id=TelegramChat.STUDENT_ID, is_bot=False, first_name="User"
+                ),
+            )
+        )
+
+        # подаем апдейт
+        await dispatcher.feed_update(
+            bot=bot, update=Update(
+                update_id=190, message=unregistred_student_msg
+            )
+        )
+
+        outgoing_message: TelegramType = bot.session.get_request()
+        _ = bot.session.get_request()
+        assert isinstance(outgoing_message, SendMessage)
+        assert outgoing_message.text == \
+            bot_auth_messages[BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST]

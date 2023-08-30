@@ -4,7 +4,8 @@ import pytest
 from aiogram import Dispatcher, Bot
 from aiogram.types import Message, User, Chat
 
-from mocked_bot import MockedBot
+#from mocked_bot import MockedBot
+from tests.test_homeworkbot.mocked_bot import MockedBot
 
 
 class TelegramChat(IntEnum):

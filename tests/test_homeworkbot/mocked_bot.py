@@ -7,8 +7,6 @@ from aiogram.methods import TelegramMethod
 from aiogram.methods.base import Response, TelegramType
 from aiogram.types import UNSET_PARSE_MODE, ResponseParameters, User
 
-from config import settings
-
 
 class MockedSession(BaseSession):
     def __init__(self):
@@ -33,17 +31,16 @@ class MockedSession(BaseSession):
         method: TelegramMethod[TelegramType],
         timeout: Optional[int] = UNSET_PARSE_MODE,
     ) -> TelegramType:
-        # self.closed = False
-        # self.requests.append(method)
-        # response: Response[TelegramType] = self.responses.pop()
-        # self.check_response(
-        #     bot=bot,
-        #     method=method,
-        #     status_code=response.error_code,
-        #     content=response.model_dump_json(),
-        # )
-        # return response.result  # type: ignore
-        return method
+        self.closed = False
+        self.requests.append(method)
+        response: Response[TelegramType] = self.responses.pop()
+        self.check_response(
+            bot=bot,
+            method=method,
+            status_code=response.error_code,
+            content=response.model_dump_json(),
+        )
+        return response.result  # type: ignore
 
     async def stream_content(
         self,

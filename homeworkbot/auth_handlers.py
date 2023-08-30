@@ -13,6 +13,7 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.filters.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
+from aiogram.enums.chat_member_status import ChatMemberStatus
 
 from homeworkbot.configuration import bot
 from homeworkbot.admin_handlers import admin_keyboard
@@ -54,7 +55,7 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
         response = await bot.get_chat_member(chat_id, user_id)
 
         # если пользователь покинул чат
-        if response.status == 'left':
+        if response.status == ChatMemberStatus.LEFT:
             return False
         # если пользователь присутсвует
         else:
@@ -63,10 +64,6 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
     except TelegramAPIError as ex:
         if ex.message == 'Bad Request: user not found':
             return False
-
-
-async def start(message: Message):
-    return await message.answer(text='Hello')
 
 
 @auth_router.message(CommandStart())
@@ -85,17 +82,17 @@ async def process_start_command(message: Message):
     user = common_crud.user_verification(message.from_user.id)
     match user:
         case UserEnum.Admin:
-            await message.answer(
+            return await message.answer(
                 text=bot_auth_messages[BotAuthUsers.ADMIN_AUTH_ANSWER],
                 reply_markup=admin_keyboard(message)
             )
         case UserEnum.Teacher:
-            await message.answer(
+            return await message.answer(
                 text=bot_auth_messages[BotAuthUsers.TEACHER_AUTH_ANSWER],
                 reply_markup=create_teacher_keyboard(message)
             )
         case UserEnum.Student:
-            await message.answer(
+            return await message.answer(
                 text=bot_auth_messages[BotAuthUsers.STUDENT_AUTH_ANSWER],
                 reply_markup=student_keyboard()
             )
@@ -130,14 +127,14 @@ async def process_start_command(message: Message):
                 )
 
                 # запрос разрешения у студента на обработку его ПД
-                await message.answer(
+                return await message.answer(
                     text=bot_auth_messages[
                         BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST
                     ],
                     reply_markup=yes_or_no_kb.as_markup(),
                 )
             else:
-                await message.answer(text=bot_auth_messages[
+                return await message.answer(text=bot_auth_messages[
                     BotAuthUsers.TG_USER_NOT_IN_CHAT
                 ],)
 
