@@ -22,6 +22,7 @@ class MockedSession(BaseSession):
     def get_request(self) -> TelegramMethod[TelegramType]:
         return self.requests.pop()
 
+
     async def close(self):
         self.closed = True
 

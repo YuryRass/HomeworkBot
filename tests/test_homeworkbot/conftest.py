@@ -1,11 +1,13 @@
 import datetime
 from enum import IntEnum
 import pytest
-from aiogram import Dispatcher, Bot
-from aiogram.types import Message, User, Chat
 
-#from mocked_bot import MockedBot
-from tests.test_homeworkbot.mocked_bot import MockedBot
+from aiogram import Dispatcher
+from aiogram.types import Message, User, Chat, CallbackQuery
+
+from homeworkbot.lexicon import (
+    bot_auth_callbacks, bot_auth_messages, BotAuthUsers
+)
 
 
 class TelegramChat(IntEnum):
@@ -39,10 +41,31 @@ class AuthHandlers:
         return admin_msg, teacher_msg, user_not_in_chat_msg, unregistred_student_msg
 
     @pytest.fixture()
-    def bot(self):
-        return MockedBot()
+    def callback_students_answers(self) -> tuple[CallbackQuery]:
+        students_answers: list[str] = [
+            bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_YES_CALLBACK],
+            bot_auth_callbacks[BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK]
+        ]
 
-    @pytest.fixture()
-    def dispatcher(self):
-        dp = Dispatcher()
-        return dp
+        yes_and_not_text: list[str] = [
+            bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_YES],
+            bot_auth_messages[BotAuthUsers.STUDENT_BUTTON_NO]
+        ]
+
+        callback_students_answers: tuple[CallbackQuery] = (
+            CallbackQuery(
+                id='chosen',
+                from_user=User(
+                    id=TelegramChat.STUDENT_ID, is_bot=False, first_name="Test"
+                ),
+                data=data,
+                chat_instance="test",
+                message=Message(
+                    message_id=42, date=datetime.datetime.now(),
+                    text=text,
+                    chat=Chat(id=TelegramChat.ID, type='private'),
+                )
+
+            ) for data, text in zip(students_answers, yes_and_not_text)
+        )
+        return callback_students_answers

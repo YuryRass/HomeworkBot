@@ -82,17 +82,17 @@ async def process_start_command(message: Message):
     user = common_crud.user_verification(message.from_user.id)
     match user:
         case UserEnum.Admin:
-            return await message.answer(
+            await message.answer(
                 text=bot_auth_messages[BotAuthUsers.ADMIN_AUTH_ANSWER],
                 reply_markup=admin_keyboard(message)
             )
         case UserEnum.Teacher:
-            return await message.answer(
+            await message.answer(
                 text=bot_auth_messages[BotAuthUsers.TEACHER_AUTH_ANSWER],
                 reply_markup=create_teacher_keyboard(message)
             )
         case UserEnum.Student:
-            return await message.answer(
+            await message.answer(
                 text=bot_auth_messages[BotAuthUsers.STUDENT_AUTH_ANSWER],
                 reply_markup=student_keyboard()
             )
@@ -127,14 +127,14 @@ async def process_start_command(message: Message):
                 )
 
                 # запрос разрешения у студента на обработку его ПД
-                return await message.answer(
+                await message.answer(
                     text=bot_auth_messages[
                         BotAuthUsers.STUDENT_PERSONAL_DATA_REQUEST
                     ],
                     reply_markup=yes_or_no_kb.as_markup(),
                 )
             else:
-                return await message.answer(text=bot_auth_messages[
+                await message.answer(text=bot_auth_messages[
                     BotAuthUsers.TG_USER_NOT_IN_CHAT
                 ],)
 
@@ -172,12 +172,12 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
                 BotAuthUsers.STUDENT_ANSWER_NO_CALLBACK
             ]:
                 await call.message.edit_text(
-                    text=bot_auth_callbacks[
+                    text=bot_auth_messages[
                         BotAuthUsers.BOT_ANSWER_ON_STUDENT_DISAGREEMENT
                     ],
                 )
         case _:
-            # неизвестный коллбэк-данные
+            # неизвестные коллбэк-данные
             await call.message.edit_text(
                 text=bot_auth_errors[BotAuthErrors.UNKNOWN_CALLBACK_DATA],
             )
