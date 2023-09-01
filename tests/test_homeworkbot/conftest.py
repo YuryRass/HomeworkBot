@@ -1,12 +1,13 @@
 import datetime
 from enum import IntEnum
 import pytest
-
-from aiogram import Dispatcher
-from aiogram.types import Message, User, Chat, CallbackQuery
+from aiogram.types import (
+    Message, User, Chat, CallbackQuery
+)
 
 from homeworkbot.lexicon import (
-    bot_auth_callbacks, bot_auth_messages, BotAuthUsers
+    bot_auth_callbacks, bot_auth_messages,
+    BotAuthUsers
 )
 
 
@@ -69,3 +70,48 @@ class AuthHandlers:
             ) for data, text in zip(students_answers, yes_and_not_text)
         )
         return callback_students_answers
+
+    @pytest.fixture()
+    def not_full_name_msg(self) -> Message:
+        error_full_name_msg: Message = Message(
+            message_id=43,
+            date=datetime.datetime.now(),
+            text="incorrect_full_name",
+            chat=Chat(id=TelegramChat.ID, type='private'),
+            from_user=User(
+                id=TelegramChat.STUDENT_ID, is_bot=False, first_name="Test",
+            ),
+        )
+        return error_full_name_msg
+
+    @pytest.fixture()
+    def correct_full_name_msg(self) -> Message:
+        correct_full_name_msg: Message = Message(
+            message_id=44,
+            date=datetime.datetime.now(),
+            text="Иванов Иван Иванович",
+            chat=Chat(id=TelegramChat.ID, type='private'),
+            from_user=User(
+                id=TelegramChat.STUDENT_ID, is_bot=False, first_name="Test",
+            ),
+        )
+
+        return correct_full_name_msg
+
+    @pytest.fixture()
+    def incorrect_full_name_msg(self) -> Message:
+        incorrect_full_name_msg: Message = Message(
+            message_id=44,
+            date=datetime.datetime.now(),
+            text="Иванов Пётр Васильевич",
+            chat=Chat(id=TelegramChat.ID, type='private'),
+            from_user=User(
+                id=TelegramChat.STUDENT_ID, is_bot=False, first_name="Test",
+            ),
+        )
+
+        return incorrect_full_name_msg
+
+    @pytest.fixture()
+    def registred_student(self) -> Message:
+        return self._message(TelegramChat.STUDENT_ID, TelegramChat.ID)
