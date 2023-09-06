@@ -11,7 +11,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ContentType
 from aiogram.filters import Command, StateFilter
 
-from homeworkbot.admin_handlers.utils import start_upload_file_message, finish_upload_file_message
+from homeworkbot.admin_handlers.utils import (
+    start_upload_file_message, finish_upload_file_message
+)
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router
 from homeworkbot.configuration import bot
@@ -49,8 +51,10 @@ async def _handle_add_discipline(message: Message, state: FSMContext):
     await state.set_state(state=AdminStates.upload_discipline)
 
 
-@admin_router.message(StateFilter(AdminStates.upload_discipline),
-                F.content_type == ContentType.DOCUMENT)
+@admin_router.message(
+    StateFilter(AdminStates.upload_discipline),
+    F.content_type == ContentType.DOCUMENT
+)
 async def handle_upload_discipline(message: Message, state: FSMContext):
     """
         Обработчик загрузки дисциплины и добавления ее в таблицу.
@@ -70,16 +74,22 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
         # добавляем дисциплину в таблицу
         admin_crud.add_discipline(discipline)
 
-        path = Path.cwd() # текущий рабочий каталог
+        path = Path.cwd()  # текущий рабочий каталог
 
         # создаем директории, где будут храниться тесты
         # и ответы студентов для загруженной дисицплины
-        Path(path.joinpath(discipline.path_to_test)).mkdir(parents=True, exist_ok=True)
-        Path(path.joinpath(discipline.path_to_answer)).mkdir(parents=True, exist_ok=True)
+        Path(path.joinpath(discipline.path_to_test)).mkdir(
+            parents=True, exist_ok=True
+        )
+        Path(path.joinpath(discipline.path_to_answer)).mkdir(
+            parents=True, exist_ok=True
+        )
 
         # оповещаем о завершении загрузки файла
-        await finish_upload_file_message(result_message,
-                                         f'<i>Дисциплина {discipline.short_name} добавлена!</i>')
+        await finish_upload_file_message(
+            result_message,
+            f'<i>Дисциплина {discipline.short_name} добавлена!</i>'
+        )
 
     else:
         await message.answer(text="Неверный тип файла")

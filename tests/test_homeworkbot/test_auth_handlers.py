@@ -8,7 +8,7 @@ from aiogram.methods.base import TelegramType
 from aiogram.fsm.storage.base import StorageKey
 
 from homeworkbot.auth_handlers import is_subscribed, AuthStates
-from homeworkbot.lexicon import (
+from homeworkbot.lexicon.auth_users import (
     bot_auth_messages, bot_auth_errors, BotAuthUsers, BotAuthErrors
 )
 from homeworkbot.admin_handlers import admin_keyboard
@@ -71,7 +71,18 @@ class TestAuthHandlers(AuthHandlers):
 
         self.bot.session.get_request()  # очистка
 
-        # TODO: протестировать еще исключение
+        # Случай, когда пользователя нет в чате
+        self.bot.add_result_for(
+            method=GetChatMember,
+            ok=False,
+            error_code=400  # BAD_REQUEST (TelegramAPIError)
+        )
+        user_in_chat: bool = await is_subscribed(
+            chat_id=TelegramChat.ID, user_id=TelegramChat.USER_NOT_IN_CHAT_ID
+        )
+
+        assert not user_in_chat
+        self.bot.session.get_request()  # очистка
 
     @pytest.mark.asyncio
     async def test_process_start_command(self, messages: tuple[Message]):

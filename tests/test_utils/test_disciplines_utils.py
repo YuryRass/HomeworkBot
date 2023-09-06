@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from conftest import DisciplinesUtils
+from tests.test_utils.conftest import DisciplinesUtils
 from utils.disciplines_utils import (
     load_disciplines_config, disciplines_config_to_json,
     disciplines_works_to_json, disciplines_works_from_json,

@@ -35,16 +35,18 @@ class KeyWordsController:
         glv = self.test_settings.global_level  # настройки глобального уровня
         llv = self.test_settings.local_level  # настройки локального уровня
         # список всех путей файлов-ответов
-        answer_files = glob.glob(f"{self.test_dir}\\lab*.py")
+        filter_test_dir = Path(self.test_dir)
+        filter_test_dir = filter_test_dir.joinpath('lab*.py')
+        answer_files = glob.glob(f'{filter_test_dir}')
 
         # проверка глобальных политик тестирования в ответах студента
         if self.__has_global_keywords(answer_files, glv):
-            answer_files = glob.glob(f"{self.test_dir}\\lab*.py")
+            answer_files = glob.glob(f'{filter_test_dir}')
 
         self.__delete_local_settings(answer_files)
         self.__has_local_keywords(answer_files, llv)
 
-        answer_files = glob.glob(f"{self.test_dir}\\lab*.py")
+        answer_files = glob.glob(f'{filter_test_dir}')
         if answer_files:
             self.is_test_available = True
 

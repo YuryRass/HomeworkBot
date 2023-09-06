@@ -1,6 +1,7 @@
-"""Выражения телеграм-бота"""
+"""Выражения телеграм-бота при авторизации tg пользователей"""
 
 from enum import Enum, auto
+
 
 class BotAuthUsers(Enum):
     """Класс сообщений бота при аутентификации Tg пользователя"""
@@ -29,10 +30,6 @@ class BotAuthUsers(Enum):
 
     # успешная авторизация студента
     STUDENT_AUTH_SUCCESS = auto()
-
-
-class BotNotCorrectDataFormat:
-    pass
 
 
 #  словарь с сообщениями бота при аутентифкации Tg пользователя
@@ -73,6 +70,7 @@ class BotAuthErrors(Enum):
     INCORECT_STUDENT_FULLNAME = auto()
     NOT_FULL_NAME = auto()
     UNKNOWN_CALLBACK_DATA = auto()
+
 
 bot_auth_errors: dict = {
     BotAuthErrors.INCORRECT_CALLBACK_DATA: 'Неизвестный формат для обработки данных!',

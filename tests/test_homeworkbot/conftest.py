@@ -5,7 +5,7 @@ from aiogram.types import (
     Message, User, Chat, CallbackQuery
 )
 
-from homeworkbot.lexicon import (
+from homeworkbot.lexicon.auth_users import (
     bot_auth_callbacks, bot_auth_messages,
     BotAuthUsers
 )

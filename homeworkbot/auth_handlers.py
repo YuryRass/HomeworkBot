@@ -20,7 +20,7 @@ from homeworkbot.admin_handlers import admin_keyboard
 from homeworkbot.student_handlers import student_keyboard
 from homeworkbot.teacher_handlers import create_teacher_keyboard
 
-from homeworkbot.lexicon import (
+from homeworkbot.lexicon.auth_users import (
     bot_auth_messages, bot_auth_callbacks,
     bot_auth_errors, BotAuthUsers, BotAuthErrors
 )
@@ -28,7 +28,6 @@ from homeworkbot.lexicon import (
 import database.main_db.common_crud as common_crud
 import database.main_db.student_crud as student_crud
 from database.main_db.common_crud import UserEnum
-
 
 auth_router: Router = Router()
 
@@ -61,9 +60,8 @@ async def is_subscribed(chat_id: int, user_id: int) -> bool:
         else:
             return True
     # пользователя нет в чате
-    except TelegramAPIError as ex:
-        if ex.message == 'Bad Request: user not found':
-            return False
+    except TelegramAPIError:  # Bad Request
+        return False
 
 
 @auth_router.message(CommandStart())
@@ -160,7 +158,7 @@ async def callback_auth_query(call: CallbackQuery, state: FSMContext):
                 # Устанавливаем состояние ожидания ввода ФИО
                 await state.set_state(state=AuthStates.full_name)
 
-                # сообщени еот бота, чтобы пользователь ввел свои ФИО
+                # сообщени от бота, чтобы пользователь ввел свои ФИО
                 await call.message.edit_text(
                     text=bot_auth_messages[
                         BotAuthUsers.BOT_MESSAGE_FOR_INPUT_STUDENT_FULL_NAME

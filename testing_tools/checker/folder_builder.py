@@ -1,6 +1,7 @@
 import glob
 import json
 import shutil
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -78,7 +79,7 @@ class FolderBuilder:
         ).joinpath(
             str(self.answer.lab_number)
         ).joinpath(
-            f'{self.student_id}_{current_time:%Y-%m-%d_%H-%M-%S%z}'
+            f'{self.student_id}_{uuid.uuid4()}'
         )
 
         # создаем папку для докера

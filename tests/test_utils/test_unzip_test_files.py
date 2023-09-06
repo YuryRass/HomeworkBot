@@ -2,7 +2,7 @@ import os
 import pytest
 
 from utils.unzip_test_files import save_test_files, DeleteFileException
-from conftest import UnzipTestFiles
+from tests.test_utils.conftest import UnzipTestFiles
 
 
 class TestUnzipHomeWorkFiles(UnzipTestFiles):

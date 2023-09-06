@@ -5,7 +5,7 @@ from utils.homework_utils import (
     create_homeworks, homeworks_from_json,
     homeworks_to_json
 )
-from conftest import DisciplinesUtils, HomeWorkUtils
+from tests.test_utils.conftest import DisciplinesUtils, HomeWorkUtils
 
 
 class TestHomeWorkUtils(DisciplinesUtils, HomeWorkUtils):

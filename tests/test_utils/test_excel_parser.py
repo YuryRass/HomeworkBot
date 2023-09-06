@@ -1,4 +1,4 @@
-from conftest import ExcelParser
+from tests.test_utils.conftest import ExcelParser
 
 
 class TestExcelParser(ExcelParser):

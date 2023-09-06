@@ -1,11 +1,15 @@
 from collections import deque
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Deque, Dict, Optional, Type
+from typing import (
+    TYPE_CHECKING, Any, AsyncGenerator, Deque, Dict, Optional, Type
+)
 
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram.methods import TelegramMethod
 from aiogram.methods.base import Response, TelegramType
 from aiogram.types import UNSET_PARSE_MODE, ResponseParameters, User
+
+from config import settings
 
 
 class MockedSession(BaseSession):
@@ -15,13 +19,14 @@ class MockedSession(BaseSession):
         self.requests: Deque[TelegramMethod[TelegramType]] = deque()
         self.closed = True
 
-    def add_result(self, response: Response[TelegramType]) -> Response[TelegramType]:
+    def add_result(
+        self, response: Response[TelegramType]
+    ) -> Response[TelegramType]:
         self.responses.append(response)
         return response
 
     def get_request(self) -> TelegramMethod[TelegramType]:
         return self.requests.pop()
-
 
     async def close(self):
         self.closed = True
@@ -60,7 +65,7 @@ class MockedBot(Bot):
 
     def __init__(self, **kwargs):
         super(MockedBot, self).__init__(
-            kwargs.pop("token", "42:TEST"), session=MockedSession(), **kwargs
+            kwargs.pop("token", settings.BOT_TOKEN), session=MockedSession(), **kwargs
         )
         self._me = User(
             id=self.id,

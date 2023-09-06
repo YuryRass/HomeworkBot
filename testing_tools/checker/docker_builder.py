@@ -1,6 +1,6 @@
 """Модуль отвечает за создание докер образа и запуск докер-контейнера"""
 import json
-from datetime import datetime
+import uuid
 from pathlib import Path
 
 from python_on_whales import docker
@@ -26,8 +26,7 @@ class DockerBuilder:
         with open(settings_path, encoding='utf-8') as file:
             data = json.load(file)
         self.dependencies = TestSettings(**data).dependencies
-        self.tag_name = f'{student_id}-{lab_number}-' + \
-            f'{datetime.now():%Y-%m-%d_%H-%M-%S%z}'
+        self.tag_name = f'{student_id}-{lab_number}-{uuid.uuid4()}'
         self.logs: str | None = None
 
     def _build_docker_file(self):
@@ -47,7 +46,7 @@ class DockerBuilder:
         file.append('RUN ["pytest", "--tb=no"]\n')
         file.append('CMD ["python3", "docker_output.py"]\n')
 
-        f = open(f"{self.test_dir}/Dockerfile", "w")
+        f = open(self.test_dir.joinpath('Dockerfile'), "w")
         f.writelines(file)
         f.close()
 
