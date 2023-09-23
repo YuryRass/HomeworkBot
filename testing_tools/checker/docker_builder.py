@@ -15,6 +15,7 @@ class DockerBuilder:
     def __init__(
         self, path_to_folder: Path, student_id: int, lab_number: int
     ) -> None:
+        # добавить data_path - путь до хостовой директории куда будут попадать данные из контейнера
         """
         :param path_to_folder: путь до директории с файлами, которые будут
         отправлены в контейнер
@@ -28,6 +29,7 @@ class DockerBuilder:
         self.dependencies = TestSettings(**data).dependencies
         self.tag_name = f'{student_id}-{lab_number}-{uuid.uuid4()}'
         self.logs: str | None = None
+        # self.volumes = [(self.data_path, "/opt")]
 
     def _build_docker_file(self):
         file = [
@@ -61,5 +63,7 @@ class DockerBuilder:
         )
         with docker.run(
             self.tag_name, name=self.tag_name, detach=True
+            # volumes=self.volumes
         ) as output:
             self.logs = docker.container.logs(output)
+            # self.data_path.*.json

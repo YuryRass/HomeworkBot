@@ -11,7 +11,7 @@ from .report_model import LabReport, TestLogInit, TaskReport
 class _SingletonBaseClass(type):
     """Шаблон - одиночка."""
     _instances = {}  # словарь с экземплярами классов
-    _lock: Lock = Lock()  # примитивныq объект блокировки
+    _lock: Lock = Lock()  # примитивный объект блокировки
 
     def __call__(cls, *args, **kwargs):
         with cls._lock:  # в синхронном режиме
@@ -121,6 +121,7 @@ class DockerLogger(metaclass=_SingletonBaseClass):
 
     def save(self) -> None:
         """Сохранение результатов тестирования в JSON файл"""
+        # создать path_to_volume и записать там логи
         with open(self.path_to_log, 'w', encoding='utf-8') as fp:
             fp.write(
                 self.lab_report.model_dump_json(

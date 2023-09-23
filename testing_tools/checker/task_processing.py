@@ -114,6 +114,7 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
         record.telegram_id,
         folder_builder.get_lab_number()
     )
+    # запускаем докер-контейнер
     docker_builder.run_docker()
 
     lab_report = LabReport(**json.loads(docker_builder.get_run_result()))
