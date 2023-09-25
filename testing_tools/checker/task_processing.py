@@ -36,9 +36,14 @@ class TaskProcessing:
         self.docker_amount_restriction = docker_amount_restriction
 
     async def run(self):
-        async with asyncio.TaskGroup() as tg:
-            for _ in range(self.docker_amount_restriction):
-                tg.create_task(self.__task_processing())
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for _ in range(self.docker_amount_restriction):
+                    tg.create_task(self.__task_processing())
+        except ExceptionGroup as eg:
+            print(f'got {eg}')
+
+        return 0
 
     async def __task_processing(self):
         while True:
