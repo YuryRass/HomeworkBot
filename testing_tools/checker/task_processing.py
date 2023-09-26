@@ -36,12 +36,9 @@ class TaskProcessing:
         self.docker_amount_restriction = docker_amount_restriction
 
     async def run(self):
-        try:
-            async with asyncio.TaskGroup() as tg:
-                for _ in range(self.docker_amount_restriction):
-                    tg.create_task(self.__task_processing())
-        except ExceptionGroup as eg:
-            print(f'got {eg}')
+        async with asyncio.TaskGroup() as tg:
+            for _ in range(self.docker_amount_restriction):
+                tg.create_task(self.__task_processing())
 
         return 0
 
@@ -111,7 +108,6 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
     # добавляем файлы в папку, где будет запускаться докер
     module_path = Path.cwd().joinpath('testing_tools')
     folder_builder.add_file(module_path.joinpath('conftest.py'))
-    folder_builder.add_file(module_path.joinpath('docker_output.py'))
     folder_builder.add_dir(module_path.joinpath('logger'))
 
     docker_builder = DockerBuilder(

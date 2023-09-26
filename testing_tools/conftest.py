@@ -8,13 +8,15 @@ from logger.docker_logger import DockerLogger
 
 @pytest.fixture(scope="session")
 def logger() -> DockerLogger:
-    """Логгер для написания тестов"""
+    """Логгер для написания тестов."""
     return DockerLogger()
 
 
-def pytest_sessionfinish(session, exitstatus):
+@pytest.fixture(scope='session', autouse=True)
+def save_data():
     """
     Функция запускается после завершения всех тестов
     """
+    yield
     logger = DockerLogger()
     logger.save()

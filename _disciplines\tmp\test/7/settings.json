@@ -1,0 +1,189 @@
+{
+    "dependencies": null,
+    "global_level": {
+        "prohibition": [
+            "for ",
+            "eval\\(",
+            "while "
+        ],
+        "restriction": null
+    },
+    "local_level": [
+        {
+            "lab_number": 1,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "\\+",
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 2,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 3,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "\\*\\*",
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 4,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 5,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": null
+        },
+        {
+            "lab_number": 6,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": null
+        },
+        {
+            "lab_number": 7,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 8,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 9,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 10,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 11,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 12,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 13,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 14,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 15,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 16,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 17,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 18,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 19,
+            "resolve_import": null,
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        },
+        {
+            "lab_number": 20,
+            "resolve_import": [
+                "math"
+            ],
+            "prohibition": null,
+            "restriction": [
+                "input\\(\\)"
+            ]
+        }
+    ]
+}

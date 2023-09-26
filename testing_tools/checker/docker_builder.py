@@ -1,9 +1,10 @@
 """Модуль отвечает за создание докер образа и запуск докер-контейнера"""
+import os
 import json
 import uuid
 from pathlib import Path
 
-from python_on_whales import docker
+from python_on_whales import docker, Volume
 
 from model.pydantic.test_settings import TestSettings
 
@@ -28,42 +29,52 @@ class DockerBuilder:
             data = json.load(file)
         self.dependencies = TestSettings(**data).dependencies
         self.tag_name = f'{student_id}-{lab_number}-{uuid.uuid4()}'
-        self.logs: str | None = None
-        # self.volumes = [(self.data_path, "/opt")]
+        self.report_data: str | None = None
+        
+        # Docker volume
+        self.data_path = Path.cwd().joinpath('docker_data').joinpath(self.tag_name)
+        Path(self.data_path).mkdir(parents=True, exist_ok=True)
 
     def _build_docker_file(self):
         file = [
             "FROM python:3.11\n",
             "WORKDIR /opt/\n"
-            "COPY . /opt \n",
+            "RUN mkdir data\n",
+            "RUN pip install pytest pydantic\n",
         ]
 
-        dependencies = 'pytest pydantic'
         if self.dependencies:
-            for it in self.dependencies:
-                dependencies += f' {it}'
-
-        file.append(f"RUN pip install {dependencies}\n")
+            file.append(f"RUN pip install {' '.join(self.dependencies)}\n")
+            
+        file.append("COPY . /opt\n")
+        
         # --tb=no - никаких сообщений
-        file.append('RUN ["pytest", "--tb=no"]\n')
-        file.append('CMD ["python3", "docker_output.py"]\n')
-
+        file.append('CMD ["pytest", "--tb=no"]\n')
+ 
         f = open(self.test_dir.joinpath('Dockerfile'), "w")
         f.writelines(file)
         f.close()
 
     def get_run_result(self) -> str:
-        return self.logs
+        return self.report_data
 
-    def run_docker(self):
+    def run_docker(self) -> str:
         self._build_docker_file()
+        some_volume = docker.volume.create()
 
         docker.build(
             context_path=self.test_dir, tags=self.tag_name
         )
-        with docker.run(
-            self.tag_name, name=self.tag_name, detach=True
-            # volumes=self.volumes
-        ) as output:
-            self.logs = docker.container.logs(output)
-            # self.data_path.*.json
+        docker.run(
+            self.tag_name, name=self.tag_name, detach=True,
+            volumes=[(some_volume, "/opt/data")],
+        )
+        self.report_data = self.get_json_data_from_volume(some_volume)
+        
+    def get_json_data_from_volume(self, volume: Volume) -> str:
+        docker.volume.copy((volume, '.'), self.data_path)
+        for fname in self.data_path.iterdir():
+            if fname.name.endswith('.json'):
+                return fname.read_text(encoding='utf-8')
+        
+                    

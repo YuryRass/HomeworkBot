@@ -142,3 +142,6 @@ dmypy.json
 temp/
 _disciplines/
 files/
+
+# Docker files
+docker_data/

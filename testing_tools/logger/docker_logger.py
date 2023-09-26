@@ -31,15 +31,12 @@ class DockerLogger(metaclass=_SingletonBaseClass):
     Класс для логирования результатов
     """
     def __init__(self):
-        path_to_volume: str = 'data'
-
         # заполнение pydantic-модель TestLogInit
         with open('log_init.json', encoding='utf-8') as fp:
             data = json.load(fp)
         self.test_settings = TestLogInit(**data)
-        self.path_to_volume = path_to_volume
 
-        self.path_to_log = Path(self.path_to_volume).joinpath(
+        self.path_to_log = Path.cwd().joinpath('data').joinpath(
             f'{self.test_settings.student_id}' + \
             f'-{self.test_settings.lab_id}-' + \
             f'{self.test_settings.run_time:%Y-%m-%d_%H-%M-%S%z}.json'
@@ -125,7 +122,6 @@ class DockerLogger(metaclass=_SingletonBaseClass):
 
     def save(self) -> None:
         """Сохранение результатов тестирования в JSON файл"""
-        # создать path_to_volume и записать там логи
         with open(self.path_to_log, 'w', encoding='utf-8') as fp:
             fp.write(
                 self.lab_report.model_dump_json(
@@ -133,11 +129,3 @@ class DockerLogger(metaclass=_SingletonBaseClass):
                 )
             )
 
-    def to_json(self) -> str:
-        """
-        Метод преобразования структуры данных, хранящей результаты тестирования
-        в json-формат
-
-        :return: результат тестирования в json-формате
-        """
-        return self.lab_report.model_dump_json(indent=4, exclude_none=True)
