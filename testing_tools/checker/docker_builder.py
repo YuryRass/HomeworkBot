@@ -67,7 +67,7 @@ class DockerBuilder:
         )
         docker.run(
             self.tag_name, name=self.tag_name, detach=True,
-            volumes=[(some_volume, "/opt/data")],
+            volumes=[(some_volume, "/opt/data")]
         )
         self.report_data = self.get_json_data_from_volume(some_volume)
         
