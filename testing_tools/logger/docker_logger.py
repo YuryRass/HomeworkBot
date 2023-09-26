@@ -4,8 +4,10 @@
 
 import json
 import os
+from pathlib import Path
 from threading import Lock
 from .report_model import LabReport, TestLogInit, TaskReport
+
 
 
 class _SingletonBaseClass(type):
@@ -29,7 +31,7 @@ class DockerLogger(metaclass=_SingletonBaseClass):
     Класс для логирования результатов
     """
     def __init__(self):
-        path_to_volume: str = 'data'  # TODO: Docker env
+        path_to_volume: str = 'data'
 
         # заполнение pydantic-модель TestLogInit
         with open('log_init.json', encoding='utf-8') as fp:
@@ -37,9 +39,11 @@ class DockerLogger(metaclass=_SingletonBaseClass):
         self.test_settings = TestLogInit(**data)
         self.path_to_volume = path_to_volume
 
-        self.path_to_log = f'{self.test_settings.student_id}' + \
+        self.path_to_log = Path(self.path_to_volume).joinpath(
+            f'{self.test_settings.student_id}' + \
             f'-{self.test_settings.lab_id}-' + \
             f'{self.test_settings.run_time:%Y-%m-%d_%H-%M-%S%z}.json'
+        )
 
         # если файл-логгер существует, то считываем из него данные
         # о результатах проверки лаб. работы
