@@ -113,6 +113,8 @@ ENV/
 env.bak/
 venv.bak/
 bot
+.vscode
+
 
 # Spyder project settings
 .spyderproject
@@ -139,9 +141,10 @@ dmypy.json
 .idea/
 
 #project
-temp/
-_disciplines/
-files/
+temp
+_disciplines
+_project_settings
+files
 
 # Docker files
 docker_data/

@@ -39,6 +39,7 @@ async def create_teachers_button(message: Message, callback_prefix: str):
     await message.answer(text="Выберите преподавателя:",
                          reply_markup=teachers_kb.as_markup())
 
+
 async def start_upload_file_message(message: Message) -> Message:
     """
         Начало загрузки файла, отправленного в чат.
@@ -122,6 +123,7 @@ async def create_callback_students_button(
         reply_markup=students_kb.as_markup(),
     )
 
+
 async def create_callback_disciplines_button(
         call: CallbackQuery,
         disciplines: list[Discipline],
@@ -157,6 +159,7 @@ async def create_callback_disciplines_button(
         text="Выберите дисциплину:",
         reply_markup=disciplines_kb.as_markup(),
     )
+
 
 async def create_discipline_button(message: Message, callback_prefix: str):
     """Создает и отображает в Tg-чате список со всеми учебными дисциплинами.

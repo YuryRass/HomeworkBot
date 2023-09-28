@@ -101,28 +101,33 @@ def first_admin_keyboard(message: Message) -> ReplyKeyboardMarkup:
         [
             KeyboardButton(text=__admin_commands[AdminCommand.ADD_TEACHER]),
             KeyboardButton(text=__admin_commands[AdminCommand.ADD_CHAT])
-        ]
+    ]
 
     btns_2: list(KeyboardButton) = \
         [
             KeyboardButton(text=__admin_commands[AdminCommand.ADD_STUDENT]),
             KeyboardButton(text=__admin_commands[AdminCommand.ADD_DISCIPLINE]),
-            KeyboardButton(text=__admin_commands[AdminCommand.ADD_STUDENTS_GROUP])
-        ]
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.ADD_STUDENTS_GROUP])
+    ]
 
     btns_3: list(KeyboardButton) = \
         [
-            KeyboardButton(text=__admin_commands[AdminCommand.SET_TEACHER_TO_DISCIPLINE]),
-            KeyboardButton(text=__admin_commands[AdminCommand.SET_TEACHER_TO_GROUP])
-        ]
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.SET_TEACHER_TO_DISCIPLINE]),
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.SET_TEACHER_TO_GROUP])
+    ]
 
-    footer_buttons = [] # клавиши для переключения
+    footer_buttons = []  # клавиши для переключения
 
     # если админ в то же время является и преподом, то добавляем еще
     # одну клавишу в footer_buttons для переключения в режим препода
     if admin_crud.is_teacher(message.from_user.id):
-        footer_buttons.append(KeyboardButton(text=__admin_commands[AdminCommand.SWITCH_TO_TEACHER]))
-    footer_buttons.append(KeyboardButton(text=__admin_commands[AdminCommand.NEXT]))
+        footer_buttons.append(KeyboardButton(
+            text=__admin_commands[AdminCommand.SWITCH_TO_TEACHER]))
+    footer_buttons.append(KeyboardButton(
+        text=__admin_commands[AdminCommand.NEXT]))
     kb_builder.row(*btns_1)
     kb_builder.row(*btns_2)
     kb_builder.row(*btns_3)
@@ -137,33 +142,37 @@ def second_admin_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup
     kb_builder: ReplyKeyboardBuilder = ReplyKeyboardBuilder()
     btns_1: list(KeyboardButton) = \
         [
-            KeyboardButton(text=__admin_commands[AdminCommand.DOWNLOAD_ANSWER]),
-            KeyboardButton(text=__admin_commands[AdminCommand.DOWNLOAD_FINISH_REPORT])
-        ]
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.DOWNLOAD_ANSWER]),
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.DOWNLOAD_FINISH_REPORT])
+    ]
 
     btns_2: list(KeyboardButton) = \
         [
-            KeyboardButton(text=__admin_commands[AdminCommand.DOWNLOAD_FULL_REPORT]),
-            KeyboardButton(text=__admin_commands[AdminCommand.DOWNLOAD_SHORT_REPORT])
-        ]
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.DOWNLOAD_FULL_REPORT]),
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.DOWNLOAD_SHORT_REPORT])
+    ]
 
     btns_3: list(KeyboardButton) = \
         [
-            KeyboardButton(text=__admin_commands[AdminCommand.DOWNLOAD_ALL_ANSWER_WITH_TEST]),
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.DOWNLOAD_ALL_ANSWER_WITH_TEST]),
             KeyboardButton(text=__admin_commands[AdminCommand.BAN_STUDENT]),
             KeyboardButton(text=__admin_commands[AdminCommand.UNBAN_STUDENT])
-        ]
+    ]
 
     btns_4: list(KeyboardButton) = \
         [
             KeyboardButton(text=__admin_commands[AdminCommand.BACK]),
             KeyboardButton(text=__admin_commands[AdminCommand.NEXT])
-        ]
+    ]
     kb_builder.row(*btns_1)
     kb_builder.row(*btns_2)
     kb_builder.row(*btns_3)
     kb_builder.row(*btns_4)
-
 
     return kb_builder.as_markup()
 
@@ -178,14 +187,16 @@ def third__admin_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup
             KeyboardButton(text=__admin_commands[AdminCommand.DELETE_GROUP]),
             KeyboardButton(text=__admin_commands[AdminCommand.DELETE_TEACHER]),
             KeyboardButton(text=__admin_commands[AdminCommand.DELETE_STUDENT])
-        ]
+    ]
     btns_2: list(KeyboardButton) = \
         [
             KeyboardButton(text=__admin_commands[AdminCommand.UPLOAD_TESTS]),
-            KeyboardButton(text=__admin_commands[AdminCommand.UPLOAD_CONFIGURATION])
-        ]
+            KeyboardButton(
+                text=__admin_commands[AdminCommand.UPLOAD_CONFIGURATION])
+    ]
 
-    btns_3: list(KeyboardButton) = KeyboardButton(text=__admin_commands[AdminCommand.BACK])
+    btns_3: list(KeyboardButton) = KeyboardButton(
+        text=__admin_commands[AdminCommand.BACK])
 
     kb_builder.row(*btns_1)
     kb_builder.row(*btns_2)
@@ -301,6 +312,7 @@ async def handle_commands(message: Message, state: FSMContext):
             await create_groups_button(message, 'shortReport')
         case AdminCommand.DOWNLOAD_ALL_ANSWER_WITH_TEST:
             await _handle_download_all_test_and_answer(message)
+
 
 async def switch_admin_to_teacher_menu(message: Message):
     """Функция переключения в режим преподавателя

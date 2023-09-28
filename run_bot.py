@@ -31,3 +31,4 @@ async def main():
 if __name__ == '__main__':
     init_app()
     asyncio.run(main())
+    a = Router

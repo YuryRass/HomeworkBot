@@ -1,5 +1,4 @@
 import asyncio
-import os
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +11,8 @@ from aiogram.fsm.state import default_state
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router
 from homeworkbot.configuration import bot
+
+from config import settings
 
 
 @admin_router.message(IsOnlyAdmin(), Command(commands=['dowall']),
@@ -56,7 +57,7 @@ def create_archive_all_data() -> Path:
 
     :return: Путь до сформированного архива.
     """
-    path = Path(Path.cwd().joinpath(os.getenv("TEMP_REPORT_DIR")))
+    path = Path(Path.cwd().joinpath(settings.TEMP_REPORT_DIR))
     file_name = f'data_{datetime.now().date()}'
 
     shutil.make_archive(

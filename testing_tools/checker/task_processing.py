@@ -40,8 +40,6 @@ class TaskProcessing:
             for _ in range(self.docker_amount_restriction):
                 tg.create_task(self.__task_processing())
 
-        return 0
-
     async def __task_processing(self):
         while True:
             await asyncio.sleep(2)

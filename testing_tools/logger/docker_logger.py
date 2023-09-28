@@ -9,7 +9,6 @@ from threading import Lock
 from .report_model import LabReport, TestLogInit, TaskReport
 
 
-
 class _SingletonBaseClass(type):
     """Шаблон - одиночка."""
     _instances = {}  # словарь с экземплярами классов
@@ -30,6 +29,7 @@ class DockerLogger(metaclass=_SingletonBaseClass):
     """
     Класс для логирования результатов
     """
+
     def __init__(self):
         # заполнение pydantic-модель TestLogInit
         with open('log_init.json', encoding='utf-8') as fp:
@@ -37,8 +37,8 @@ class DockerLogger(metaclass=_SingletonBaseClass):
         self.test_settings = TestLogInit(**data)
 
         self.path_to_log = Path.cwd().joinpath('data').joinpath(
-            f'{self.test_settings.student_id}' + \
-            f'-{self.test_settings.lab_id}-' + \
+            f'{self.test_settings.student_id}' +
+            f'-{self.test_settings.lab_id}-' +
             f'{self.test_settings.run_time:%Y-%m-%d_%H-%M-%S%z}.json'
         )
 
@@ -128,4 +128,3 @@ class DockerLogger(metaclass=_SingletonBaseClass):
                     indent=4, exclude_none=True
                 )
             )
-

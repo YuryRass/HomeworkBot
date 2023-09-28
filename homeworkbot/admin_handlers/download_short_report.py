@@ -10,7 +10,6 @@ from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router
 
 
-
 @admin_router.message(IsOnlyAdmin(), Command(commands=['shortrep']),
                       StateFilter(default_state))
 async def handle_download_short_report(message: Message):

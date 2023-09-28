@@ -18,15 +18,16 @@ class AdminStates(StatesGroup):
     teacher_name = State()
     teacher_tg_id = State()
 
+
 @admin_router.message(IsOnlyAdmin(), Command(commands=['addteacher']),
-                StateFilter(default_state))
+                      StateFilter(default_state))
 async def handle_add_teacher(message: Message, state: FSMContext):
     """Обработчик добавления препода в таблицу"""
     await _handle_add_teacher(message, state)
 
 
 @admin_router.message(IsNotOnlyAdmin(), Command(commands=['addteacher']),
-                StateFilter(default_state))
+                      StateFilter(default_state))
 async def handle_no_add_chat(message: Message):
     """Обработчик невозможности добавления препода в таблицу"""
     await message.answer("Нет прав доступа!!!")
@@ -35,7 +36,9 @@ async def handle_no_add_chat(message: Message):
 async def _handle_add_teacher(message: Message, state: FSMContext) -> None:
     """Функция установки состояния teacher_name в классе AdminStates"""
     await state.set_state(state=AdminStates.teacher_name)
-    await message.answer(text="Введите ФИО преподавателя (Например, Иванов Иван Иванович):")
+    await message.answer(
+        text="Введите ФИО преподавателя (Например, Иванов Иван Иванович):"
+    )
 
 
 @admin_router.message(StateFilter(AdminStates.teacher_name))
@@ -49,9 +52,12 @@ async def teacher_name_correct(message: Message, state: FSMContext):
     if fio_pattern.match(message.text):
         await state.set_state(state=AdminStates.teacher_tg_id)
         await message.answer(text="Введите Telegram ID преподавателя:")
-        await state.update_data(teacher_name=message.text) # установка значения ФИО
+        # установка значения ФИО
+        await state.update_data(teacher_name=message.text)
     else:
-        await message.answer(text="Пожалуйста, проверьте корректность ввода ФИО!")
+        await message.answer(
+            text="Пожалуйста, проверьте корректность ввода ФИО!"
+        )
 
 
 @admin_router.message(StateFilter(AdminStates.teacher_tg_id))
@@ -66,4 +72,6 @@ async def teacher_id_correct(message: Message, state: FSMContext):
         await message.answer(text="Преподаватель успешно добавлен!")
         await state.clear()
     else:
-        await message.answer(text="Пожалуйста, проверьте корректность ввода ID!")
+        await message.answer(
+            text="Пожалуйста, проверьте корректность ввода ID!"
+        )

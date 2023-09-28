@@ -10,6 +10,7 @@ from homeworkbot.admin_handlers.utils import \
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router, common_router
 
+
 @admin_router.message(IsOnlyAdmin(), Command(commands=['ban']),
                       StateFilter(default_state))
 async def handle_ban_student(message: Message):
@@ -31,7 +32,7 @@ async def callback_ban_student(call: CallbackQuery):
     Args:
         call (CallbackQuery): сам коллбэк.
     """
-    type_callback = call.data.split('_')[0] # префикс коллбэка
+    type_callback = call.data.split('_')[0]  # префикс коллбэка
     match type_callback:
         case 'groupBan':
             group_id = int(call.data.split('_')[1])

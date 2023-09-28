@@ -51,7 +51,7 @@ async def callback_unban_student(call: CallbackQuery):
     Args:
         call (CallbackQuery): сам коллбэк.
     """
-    type_callback = call.data.split('_')[0] # префикс коллбэка
+    type_callback = call.data.split('_')[0]  # префикс коллбэка
     match type_callback:
         case 'studentUnBan':
             telegram_id = int(call.data.split('_')[1])

@@ -73,8 +73,10 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
             # создание директорий с тестами и ответами студентов
             path = Path.cwd()
             for discipline in db_start_data.disciplines:
-                Path(path.joinpath(discipline.path_to_test)).mkdir(parents=True, exist_ok=True)
-                Path(path.joinpath(discipline.path_to_answer)).mkdir(parents=True, exist_ok=True)
+                Path(path.joinpath(discipline.path_to_test)).mkdir(
+                    parents=True, exist_ok=True)
+                Path(path.joinpath(discipline.path_to_answer)).mkdir(
+                    parents=True, exist_ok=True)
 
             # сообщение о завершении
             await finish_upload_file_message(

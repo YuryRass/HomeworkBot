@@ -13,6 +13,7 @@ class BotAddChatErrors(Enum):
     NOT_NEGATIVE_ID = auto()
     NO_RIGHTS = auto()
 
+
 bot_messages: dict = {
     BotAddChat.INPUT_TG_ID: "Введите telegram id добавляемого группового чата:",
     BotAddChat.ADD_CHAT_SUCCESS: "Групповой чат успешно добавлен!",

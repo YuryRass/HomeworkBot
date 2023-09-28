@@ -194,7 +194,7 @@ async def input_full_name(message: Message, state: FSMContext):
     )
     if not fio_pattern.match(full_name):
         await message.answer(
-           text=bot_auth_errors[BotAuthErrors.NOT_FULL_NAME]
+            text=bot_auth_errors[BotAuthErrors.NOT_FULL_NAME]
         )
     else:
         # если студент с такими ФИО уже есть в таблице Student,

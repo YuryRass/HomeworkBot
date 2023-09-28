@@ -44,7 +44,7 @@ async def _handle_add_students_group(message: Message, state: FSMContext):
 
 
 @admin_router.message(StateFilter(AdminStates.upload_students_group),
-                     F.content_type == ContentType.DOCUMENT)
+                      F.content_type == ContentType.DOCUMENT)
 async def handle_upload_students_group(message: Message, state: FSMContext):
     """
         Обработчик загрузки группы студентов
@@ -73,7 +73,7 @@ async def handle_upload_students_group(message: Message, state: FSMContext):
             # оповещаем о завершении загрузки файла
             await finish_upload_file_message(
                 result_message,
-                f'<i>Группа(ы) студентов успешно дабавлена(ы)!</i>'
+                '<i>Группа(ы) студентов успешно дабавлена(ы)!</i>'
             )
             # очистка состояния админа
             await state.clear()

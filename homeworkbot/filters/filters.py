@@ -62,9 +62,9 @@ class IsOnlyStudentCommands(BaseFilter):
             and command in self.student_commands.values()
 
 
-class AddStudentCallbackFactory(CallbackData,
-                                prefix='StudentADD',
-                                sep='_'):
+class AddStudentCallbackFactory(
+    CallbackData, prefix='StudentADD', sep='_'
+):
     """
         Фабрика коллбэков по добавлению студента.
     """

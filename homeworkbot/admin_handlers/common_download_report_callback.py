@@ -135,7 +135,8 @@ async def __create_report(
     # формируем отчет об успеваемости студентов в отдельном потоке
     # в неблокирующем режиме.
     path_to_report = await asyncio.gather(
-        asyncio.to_thread(run_report_builder, group_id, discipline_id, builder_type)
+        asyncio.to_thread(run_report_builder, group_id,
+                          discipline_id, builder_type)
     )
 
     await call.message.edit_text(text="Отчет успешно сформирован")
