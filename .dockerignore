@@ -1,0 +1,21 @@
+# Python environment
+.venv/
+
+# VS Code settings
+.vscode
+
+
+# Databases
+*.sqlite
+
+# Config files
+*.json
+
+
+# Ignore files
+.dockerignore
+.gitignore
+
+
+# Other project files
+_disciplines
