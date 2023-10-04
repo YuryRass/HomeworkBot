@@ -57,7 +57,8 @@ async def chat_correct(message: Message, state: FSMContext):
     if not message.text.lstrip("-").isdigit():
         await message.answer(bot_errors[BotAddChatErrors.NOT_CORRECT_ID_CHAT])
     elif int(message.text) < 0:
-        admin_crud.add_chat(int(message.text))
+        chat_id: int = int(message.text)
+        await admin_crud.add_chat(chat_id)
         await message.answer(bot_messages[BotAddChat.ADD_CHAT_SUCCESS])
         # очистка состояний Админа
         await state.clear()

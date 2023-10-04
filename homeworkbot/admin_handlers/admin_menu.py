@@ -19,11 +19,15 @@ from homeworkbot.admin_handlers.add_chat import _handle_add_chat
 from homeworkbot.admin_handlers.add_teacher import _handle_add_teacher
 from homeworkbot.admin_handlers.add_student import _handle_add_student
 from homeworkbot.admin_handlers.add_discipline import _handle_add_discipline
-from homeworkbot.admin_handlers.add_students_group import _handle_add_students_group
+from homeworkbot.admin_handlers.add_students_group import \
+    _handle_add_students_group
 from homeworkbot.admin_handlers.upload_tests import _handle_upload_tests
-from homeworkbot.admin_handlers.upload_start_configuration import _handle_upload_start_configuration
-from homeworkbot.admin_handlers.download_all_test_and_answer import _handle_download_all_test_and_answer
-from homeworkbot.admin_handlers.unban_student import create_unban_student_buttons
+from homeworkbot.admin_handlers.upload_start_configuration import \
+    _handle_upload_start_configuration
+from homeworkbot.admin_handlers.download_all_test_and_answer import \
+    _handle_download_all_test_and_answer
+from homeworkbot.admin_handlers.unban_student import \
+    create_unban_student_buttons
 from homeworkbot.teacher_handlers import create_teacher_keyboard
 
 from homeworkbot.admin_handlers.utils import (
@@ -92,7 +96,7 @@ __admin_commands = {
 }
 
 
-def first_admin_keyboard(message: Message) -> ReplyKeyboardMarkup:
+async def first_admin_keyboard(message: Message) -> ReplyKeyboardMarkup:
     """
         Возвращает первоначальную клавиатуру для админа.
     """
@@ -123,7 +127,7 @@ def first_admin_keyboard(message: Message) -> ReplyKeyboardMarkup:
 
     # если админ в то же время является и преподом, то добавляем еще
     # одну клавишу в footer_buttons для переключения в режим препода
-    if admin_crud.is_teacher(message.from_user.id):
+    if await admin_crud.is_teacher(message.from_user.id):
         footer_buttons.append(KeyboardButton(
             text=__admin_commands[AdminCommand.SWITCH_TO_TEACHER]))
     footer_buttons.append(KeyboardButton(
@@ -135,7 +139,9 @@ def first_admin_keyboard(message: Message) -> ReplyKeyboardMarkup:
     return kb_builder.as_markup()
 
 
-def second_admin_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup:
+async def second_admin_keyboard(
+    message: Message | None = None
+) -> ReplyKeyboardMarkup:
     """
         Возвращает вторую клавиатуру для админа.
     """
@@ -159,7 +165,8 @@ def second_admin_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup
     btns_3: list(KeyboardButton) = \
         [
             KeyboardButton(
-                text=__admin_commands[AdminCommand.DOWNLOAD_ALL_ANSWER_WITH_TEST]),
+                text=__admin_commands[AdminCommand.
+                                      DOWNLOAD_ALL_ANSWER_WITH_TEST]),
             KeyboardButton(text=__admin_commands[AdminCommand.BAN_STUDENT]),
             KeyboardButton(text=__admin_commands[AdminCommand.UNBAN_STUDENT])
     ]
@@ -177,7 +184,9 @@ def second_admin_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup
     return kb_builder.as_markup()
 
 
-def third__admin_keyboard(message: Message | None = None) -> ReplyKeyboardMarkup:
+async def third__admin_keyboard(
+    message: Message | None = None
+) -> ReplyKeyboardMarkup:
     """
         Возвращает третью клавиатуру для админа.
     """
@@ -270,7 +279,7 @@ async def handle_commands(message: Message, state: FSMContext):
 
             await message.answer(
                 text="Смена меню",
-                reply_markup=__menu_list[index](message),
+                reply_markup=(await __menu_list[index](message)),
             )
         case AdminCommand.BACK:
             # если Tg ID пользователя нет в списке __menu_index,
@@ -283,7 +292,7 @@ async def handle_commands(message: Message, state: FSMContext):
             index = __menu_index[message.from_user.id]
             await message.answer(
                 text="Смена меню",
-                reply_markup=__menu_list[index](message),
+                reply_markup=(await __menu_list[index](message)),
             )
         case AdminCommand.SET_TEACHER_TO_GROUP:
             await create_teachers_button(message, 'assignTeacherGR')

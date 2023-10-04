@@ -17,6 +17,7 @@ class FirstRunConfigurator:
         Класс, содержащий конфиг. данные
         для первоначальной инициализации основной БД
     """
+
     def __init__(self, disciplines_path: str, excel_path: str):
         """
             Параметры:
@@ -38,10 +39,12 @@ class FirstRunConfigurator:
             тесты для студенческих программ и ответы студентов,
             по различным учебным дисциплинам.
         """
-        path = Path.cwd() # current work directory
+        path = Path.cwd()  # current work directory
         for it in self.__disciplines.disciplines:
-            Path(path.joinpath(it.path_to_test)).mkdir(parents=True, exist_ok=True)
-            Path(path.joinpath(it.path_to_answer)).mkdir(parents=True, exist_ok=True)
+            Path(path.joinpath(it.path_to_test)).mkdir(
+                parents=True, exist_ok=True)
+            Path(path.joinpath(it.path_to_answer)).mkdir(
+                parents=True, exist_ok=True)
 
     def counting_tasks(self, discipline: DisciplineWorksConfig) -> int:
         """Возвращает количество домашних заданий по дисциплине."""
@@ -76,7 +79,8 @@ class FirstRunConfigurator:
                 discipline = it
 
         if discipline is None:
-            raise Exception(f'Discipline with short name "{discipline_short_name}" not found')
+            raise Exception(
+                f'Discipline with short name "{discipline_short_name}" not found')
 
         empty_homework: DisciplineHomeWorks = create_homeworks(discipline)
         return homeworks_to_json(empty_homework)

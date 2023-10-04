@@ -1,9 +1,13 @@
-from typing import List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from database.main_db.database import Base
+
+if TYPE_CHECKING:
+    from model.main_db.group import Group
+    from model.main_db.assigned_discipline import AssignedDiscipline
 
 
 class Student(Base):
@@ -21,11 +25,12 @@ class Student(Base):
         back_populates="students"
     )
 
-    homeworks: Mapped[List["AssignedDiscipline"]] = relationship(
-        back_populates="student", cascade="all, delete, delete-orphan"
+    homeworks: Mapped[list["AssignedDiscipline"]] = relationship(
+        back_populates="student", cascade="all, delete, delete-orphan",
     )
 
     def __repr__(self):
         info: str = f'Студент [ФИО: {self.full_name}, ' \
-                    f'ID группы: {self.group}, Telegram ID: {self.telegram_id}]'
+                    f'ID группы: {self.group}, ' \
+                    f'Telegram ID: {self.telegram_id}]'
         return info

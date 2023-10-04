@@ -1,8 +1,7 @@
 """Модуль, реализующий CRUD-операции с промежуточн. таблицей QueueIn"""
 
-import json
-
-from pydantic.json import pydantic_encoder
+from sqlalchemy import select, delete
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from model.pydantic.queue_in_raw import QueueInRaw
 
@@ -10,7 +9,7 @@ from database.queue_db.database import Session
 from model.queue_db.queue_in import QueueIn
 
 
-def add_record(user_tg_id: int, chat_id: int, data: QueueInRaw) -> None:
+async def add_record(user_tg_id: int, chat_id: int, data: QueueInRaw) -> None:
     """Добавление записи в промеж. таблицу QueueIn
 
     Args:
@@ -18,47 +17,45 @@ def add_record(user_tg_id: int, chat_id: int, data: QueueInRaw) -> None:
         chat_id (int): ID Tg чата.
         data (QueueInRaw): данные для добавления в таблицу.
     """
-    session = Session()
-    json_data = json.dumps(
-        data,
-        sort_keys=False,
-        indent=4,
-        ensure_ascii=False,
-        separators=(',', ': '),
-        default=pydantic_encoder
-    )
+    json_data: str = data.model_dump_json(indent=4, exclude_none=True)
 
-    session.add(
-                QueueIn(
-                    telegram_id=user_tg_id,
-                    chat_id=chat_id,
-                    data=json_data
-                )
+    session: AsyncSession
+    async with Session() as session:
+        session.add(
+            QueueIn(
+                telegram_id=user_tg_id,
+                chat_id=chat_id,
+                data=json_data
             )
-    session.commit()
-    session.close()
+        )
+        await session.commit()
+        await session.close()
 
 
-def is_empty() -> bool:
+async def is_empty() -> bool:
     """Проверяет пуста ли таблица QueuIn"""
-    with Session() as session:
-        data = session.query(QueueIn).first()
-        return data is None
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(QueueIn))
+        data: list[QueueIn] | [] = res.scalars().first()
+        return not data
 
 
-def is_not_empty() -> bool:
+async def is_not_empty() -> bool:
     """Проверяет не пуста ли таблица QueuIn"""
-    with Session() as session:
-        data = session.query(QueueIn).first()
-        return data is not None
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(QueueIn))
+        data: list[QueueIn] | [] = res.scalars().first()
+        return bool(data)
 
 
-def get_first_record() -> QueueIn:
+async def get_first_record() -> QueueIn:
     """Возвращает первую запись из таблицы QueueIn"""
-    with Session() as session:
-        record = session.query(QueueIn).first()
-        session.query(QueueIn).filter(
-            QueueIn.id == record.id
-        ).delete(synchronize_session='fetch')
-        session.commit()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(QueueIn))
+        record: QueueIn = res.scalars().first()
+        await session.execute(delete(QueueIn).where(QueueIn.id == record.id))
+        await session.commit()
         return record

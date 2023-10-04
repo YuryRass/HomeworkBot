@@ -16,7 +16,8 @@ class AssignedDiscipline(Base):
         nullable=False
     )
     point: Mapped[float] = mapped_column(default=0)
-    home_work: Mapped[str] = mapped_column(JSON, nullable=False)  # DisciplineHomeWorks
+    home_work: Mapped[str] = mapped_column(
+        JSON, nullable=False)  # DisciplineHomeWorks
 
     student: Mapped["Student"] = relationship(
         back_populates="homeworks"

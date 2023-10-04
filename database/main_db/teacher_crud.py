@@ -2,7 +2,9 @@
     Модуль teacher_crud.py выполняет CRUD-операции,
     необхимые преподаваетлю, с БД
 """
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.main_db.database import Session
 
@@ -13,21 +15,23 @@ from model.main_db.discipline import Discipline
 from model.main_db.student import Student
 
 
-def is_teacher(telegram_id: int) -> bool:
+async def is_teacher(telegram_id: int) -> bool:
     """
         Возвращает True, если Telegram ID
         принадлежит преподавателю.
         Параметры:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
-    with Session() as session:
-        teacher = session.query(Teacher).filter(
-            Teacher.telegram_id == telegram_id
-        ).first()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Teacher).where(Teacher.telegram_id == telegram_id)
+        )
+        teacher: Teacher | None = res.scalars().first()
         return teacher is not None
 
 
-def get_assign_group_discipline(
+async def get_assign_group_discipline(
     teacher_tg_id: int, group_id: int
 ) -> list[Discipline]:
     """
@@ -39,16 +43,17 @@ def get_assign_group_discipline(
 
     :return: список дисциплин
     """
-    with Session() as session:
-        teacher = session.query(Teacher).filter(
-            Teacher.telegram_id == teacher_tg_id
-        ).first()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Teacher).options(selectinload(Teacher.disciplines)).
+            where(Teacher.telegram_id == teacher_tg_id)
+        )
+        teacher: Teacher = res.scalars().first()
 
         teacher_set = {it.short_name for it in teacher.disciplines}
 
-        group = session.query(Group).filter(
-            Group.id == group_id
-        ).first()
+        group: Group = await session.get(Group, group_id)
 
         group_set = {it.short_name for it in group.disciplines}
 
@@ -56,17 +61,19 @@ def get_assign_group_discipline(
                 if it.short_name in teacher_set.intersection(group_set)]
 
 
-def switch_teacher_mode_to_admin(teacher_tg_id: int) -> None:
-    with Session() as session:
-        session.query(Admin).filter(
-            Admin.telegram_id == teacher_tg_id
-        ).update(
-            {'teacher_mode': False}
+async def switch_teacher_mode_to_admin(teacher_tg_id: int) -> None:
+    session: AsyncSession
+    async with Session() as session:
+        smt = (
+            update(Admin).
+            where(Admin.telegram_id == teacher_tg_id).
+            values(teacher_mode=False)
         )
-        session.commit()
+        await session.execute(smt)
+        await session.commit()
 
 
-def get_assign_groups(teacher_tg_id: int) -> list[Group]:
+async def get_assign_groups(teacher_tg_id: int) -> list[Group]:
     """
     Функция запроса списка групп, у которых ведет предметы преподаватель
 
@@ -74,13 +81,18 @@ def get_assign_groups(teacher_tg_id: int) -> list[Group]:
 
     :return: список групп
     """
-    with Session() as session:
-        smt = select(Teacher).where(Teacher.telegram_id == teacher_tg_id)
-        teacher = session.scalars(smt).first()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Teacher).
+            options(selectinload(Teacher.groups)).
+            where(Teacher.telegram_id == teacher_tg_id)
+        )
+        teacher: Teacher = res.scalars().first()
         return teacher.groups
 
 
-def get_teacher_disciplines(teacher_tg_id: int) -> list[Discipline]:
+async def get_teacher_disciplines(teacher_tg_id: int) -> list[Discipline]:
     """
     Функция запроса списка дисциплин, которые числятся за преподавателем
 
@@ -88,13 +100,18 @@ def get_teacher_disciplines(teacher_tg_id: int) -> list[Discipline]:
 
     :return: список дисциплин
     """
-    with Session() as session:
-        smt = select(Teacher).where(Teacher.telegram_id == teacher_tg_id)
-        teacher = session.scalars(smt).first()
+    session: AsyncSession
+    async with Session() as session:
+        smt = await session.execute(
+            select(Teacher).
+            options(selectinload(Teacher.disciplines)).
+            where(Teacher.telegram_id == teacher_tg_id)
+        )
+        teacher: Teacher = smt.scalars().first()
         return teacher.disciplines
 
 
-def get_auth_students(group_id: int) -> list[Student]:
+async def get_auth_students(group_id: int) -> list[Student]:
     """Функция возвращает список авторизованных студентов.
 
     Args:
@@ -103,11 +120,16 @@ def get_auth_students(group_id: int) -> list[Student]:
     Returns:
         list[Student]: список авторизованных студентов.
     """
-    with Session() as session:
-        students = session.query(Student).filter(
-            and_(
-                Student.group_id == group_id,
-                Student.telegram_id.is_not(None),
+    session: AsyncSession
+    async with Session() as session:
+        smt = await session.execute(
+            select(Student).
+            where(
+                and_(
+                    Student.group_id == group_id,
+                    Student.telegram_id.is_not(None),
+                )
             )
-        ).all()
+        )
+        students: list[Student] = smt.scalars().all()
         return students

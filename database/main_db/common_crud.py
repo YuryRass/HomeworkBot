@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import exists, and_, select, delete
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.main_db import admin_crud
 from database.main_db.database import Session
@@ -33,29 +34,26 @@ class UserEnum(Enum):
     Unknown = 3
 
 
-def user_verification(telegram_id: int) -> UserEnum:
+async def user_verification(telegram_id: int) -> UserEnum:
     """
         Аутентификация Telegram пользователя
         Параметры:
         telegram_id (int): Telegram ID пользователя.
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         # проверка на админа
-        user = session.get(Admin, telegram_id)
+        user: Admin = await session.get(Admin, telegram_id)
         if user is not None:
             return UserEnum.Admin
 
         # проверка на препода
-        user = session.query(Teacher).filter(
-            Teacher.telegram_id == telegram_id
-        ).first()
+        user: Teacher = await session.get(Teacher, telegram_id)
         if user is not None:
             return UserEnum.Teacher
 
         # проверка на студента
-        user = session.query(Student).filter(
-            Student.telegram_id == telegram_id
-        ).first()
+        user: Student = await session.get(Student, telegram_id)
         if user is not None:
             return UserEnum.Student
 
@@ -63,29 +61,32 @@ def user_verification(telegram_id: int) -> UserEnum:
     return UserEnum.Unknown
 
 
-def get_chats() -> list[int]:
+async def get_chats() -> list[int]:
     """Получение списка с идентифкаторами Tg-чатов
 
     Returns:
         list[int]: список с идентифкаторами Tg-чатов
     """
-    with Session() as session:
-        chats = session.query(Chat).all()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(Chat))
+        chats: list[Chat] = res.scalars().all()
         return [it.chat_id for it in chats]
 
 
-def get_group_disciplines(group_id: int) -> list[Discipline]:
+async def get_group_disciplines(group_id: int) -> list[Discipline]:
     """
         Возвращает список дисциплин для учебной группы.
         Параметры:
         group_id (int): ID учебной группы
     """
-    with Session() as session:
-        group = session.get(Group, group_id)
+    session: AsyncSession
+    async with Session() as session:
+        group: Group = await session.get(Group, group_id)
         return group.disciplines
 
 
-def ban_student(telegram_id: int) -> None:
+async def ban_student(telegram_id: int) -> None:
     """
     Функция для записи идентификатора студента в бан-лист
 
@@ -93,12 +94,13 @@ def ban_student(telegram_id: int) -> None:
 
     :return: None
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         session.add(StudentBan(telegram_id=telegram_id))
-        session.commit()
+        await session.commit()
 
 
-def unban_student(telegram_id: int) -> None:
+async def unban_student(telegram_id: int) -> None:
     """
     Функция для удаления идентификатора студента из бан-листа
 
@@ -106,15 +108,16 @@ def unban_student(telegram_id: int) -> None:
 
     :return: None
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         smt = delete(StudentBan).where(
             StudentBan.telegram_id == telegram_id
         )
-        session.execute(smt)
-        session.commit()
+        await session.execute(smt)
+        await session.commit()
 
 
-def is_ban(telegram_id: int) -> bool:
+async def is_ban(telegram_id: int) -> bool:
     """
     Функция проверки нахождения студента в бан-листе
 
@@ -122,12 +125,13 @@ def is_ban(telegram_id: int) -> bool:
 
     :return: True, если студент забанен, иначе False
     """
-    with Session() as session:
-        tg_id = session.query(StudentBan).get(telegram_id)
-        return tg_id is not None
+    session: AsyncSession
+    async with Session() as session:
+        student: StudentBan = await session.get(StudentBan, telegram_id)
+        return student is not None
 
 
-def get_ban_students(teacher_telegram_id: int) -> list[Student]:
+async def get_ban_students(teacher_telegram_id: int) -> list[Student]:
     """
     Функция запроса списка забаненных студентов в группах, где
     ведет конкретный преподаватель или всех студентов, если
@@ -137,12 +141,14 @@ def get_ban_students(teacher_telegram_id: int) -> list[Student]:
 
     :return: список забаненных студентов
     """
-    with Session() as session:
-        if admin_crud.is_admin_no_teacher_mode(teacher_telegram_id):
+    session: AsyncSession
+    async with Session() as session:
+        if await admin_crud.is_admin_no_teacher_mode(teacher_telegram_id):
             smt = select(Student).where(
                 exists().where(StudentBan.telegram_id == Student.telegram_id)
             )
-            return session.scalars(smt).all()
+            res = await session.execute(smt)
+            return res.scalars().all()
         else:
             smt = select(Student).where(
                 exists().where(StudentBan.telegram_id == Student.telegram_id)
@@ -158,10 +164,11 @@ def get_ban_students(teacher_telegram_id: int) -> list[Student]:
             ).where(
                 Teacher.telegram_id == teacher_telegram_id
             )
-            return session.scalars(smt).all()
+            res = await session.execute(smt)
+            return res.scalars().all()
 
 
-def get_students_from_group_for_ban(group_id: int) -> list[Student]:
+async def get_students_from_group_for_ban(group_id: int) -> list[Student]:
     """
     Функция запроса студентов группы, которых можно забанить
 
@@ -169,20 +176,23 @@ def get_students_from_group_for_ban(group_id: int) -> list[Student]:
 
     :return: список студентов
     """
-    with Session() as session:
-        students = session.query(Student).filter(
-                and_(
-                    Student.group_id == group_id,
-                    Student.telegram_id.is_not(None),
-                    ~exists().where(
-                        StudentBan.telegram_id == Student.telegram_id
-                    )
+    session: AsyncSession
+    async with Session() as session:
+        smt = select(Student).where(
+            and_(
+                Student.group_id == group_id,
+                Student.telegram_id.is_not(None),
+                ~exists().where(
+                    StudentBan.telegram_id == Student.telegram_id
                 )
-        ).all()
+            )
+        )
+        res = await session.execute(smt)
+        students: list[Student] = res.scalars.all()
         return students
 
 
-def get_students_from_group(group_id) -> list[Student]:
+async def get_students_from_group(group_id) -> list[Student]:
     """
     Функция запроса списка студентов из конкретной группы
 
@@ -190,14 +200,15 @@ def get_students_from_group(group_id) -> list[Student]:
 
     :return: список студентов
     """
-    with Session() as session:
-        students = session.query(Student).filter(
-                Student.group_id == group_id
-        ).all()
+    session: AsyncSession
+    async with Session() as session:
+        smt = select(Student).where(Student.group_id == group_id)
+        res = await session.execute(smt)
+        students: list[Student] = res.scalars().all()
         return students
 
 
-def get_group(group_id: int) -> Group:
+async def get_group(group_id: int) -> Group:
     """Возвращает учебную группу по ее ID
 
     Args:
@@ -206,11 +217,13 @@ def get_group(group_id: int) -> Group:
     Returns:
         Group: учебная группа с ID = group_id.
     """
-    with Session() as session:
-        return session.query(Group).get(group_id)
+    session: AsyncSession
+    async with Session() as session:
+        group: Group = await session.get(Group, group_id)
+        return group
 
 
-def get_discipline(discipline_id: int) -> Discipline:
+async def get_discipline(discipline_id: int) -> Discipline:
     """Возвращает дисциплину по ее ID.
 
     Args:
@@ -219,11 +232,13 @@ def get_discipline(discipline_id: int) -> Discipline:
     Returns:
         Discipline: дисциплина с ID = discipline_id.
     """
-    with Session() as session:
-        return session.get(Discipline, discipline_id)
+    session: AsyncSession
+    async with Session() as session:
+        d: Discipline = await session.get(Discipline, discipline_id)
+        return d
 
 
-def get_student_discipline_answer(
+async def get_student_discipline_answer(
     student_id: int, discipline_id: int
 ) -> AssignedDiscipline:
     """Возвращает назначенную дисциплину для студента
@@ -236,15 +251,19 @@ def get_student_discipline_answer(
     Returns:
         AssignedDiscipline: назначенная дисциплина.
     """
-    with Session() as session:
-        answers = session.query(AssignedDiscipline).filter(
-            AssignedDiscipline.student_id == student_id,
-            AssignedDiscipline.discipline_id == discipline_id
-        ).first()
-        return answers
+    session: AsyncSession
+    async with Session() as session:
+        smt = select(AssignedDiscipline).where(
+            and_(
+                AssignedDiscipline.student_id == student_id,
+                AssignedDiscipline.discipline_id == discipline_id
+            )
+        )
+        res = await session.execute(smt)
+        return res.scalars().first()
 
 
-def get_student_from_id(student_id: int) -> Student:
+async def get_student_from_id(student_id: int) -> Student:
     """Функция вовзращает студента по его ID.
 
     Args:
@@ -253,11 +272,15 @@ def get_student_from_id(student_id: int) -> Student:
     Returns:
         Student: запись из таблицы Student.
     """
-    with Session() as session:
-        return session.query(Student).get(student_id)
+    session: AsyncSession
+    async with Session() as session:
+        student = await session.get(Student, student_id)
+        return student
 
 
-def write_test_result(lab_report: LabReport, input_record: QueueIn) -> None:
+async def write_test_result(
+    lab_report: LabReport, input_record: QueueIn
+) -> None:
     """
     Функция записи результата тестирования заданий из л/р или домашки с
     расчетом заработанных балов по выполнению работы. Если успевает
@@ -268,58 +291,67 @@ def write_test_result(lab_report: LabReport, input_record: QueueIn) -> None:
 
     :return: None
     """
-    session = Session()
-    task_raw = QueueInRaw(**json.loads(input_record.data))
+    session: AsyncSession
+    async with Session() as session:
+        task_raw = QueueInRaw(**json.loads(input_record.data))
+        smt = select(Student).where(
+            Student.telegram_id == input_record.telegram_id
+        )
+        res = await session.execute(smt)
 
-    student = session.query(Student).filter(
-        Student.telegram_id == input_record.telegram_id
-    ).first()
+        student: Student = res.scalars().first()
 
-    assig_discipline = session.query(AssignedDiscipline).filter(
-        AssignedDiscipline.student_id == student.id,
-        AssignedDiscipline.discipline_id == task_raw.discipline_id
-    ).first()
-
-    hwork = utils.homeworks_from_json(assig_discipline.home_work)
-
-    lab = None
-    for it in hwork.home_works:
-        if lab_report.lab_id == it.number:
-            lab = it
-            break
-
-    task_done = 0
-    for task in lab.tasks:
-        task_done += 1 if task.is_done else 0
-        for task_result in lab_report.tasks:
-            if task.number == task_result.task_id:
-                task.amount_tries += 1
-                task.last_try_time = task_result.time
-                if not task.is_done and task_result.status:
-                    task.is_done = True
-                    task_done += 1
-
-    lab.tasks_completed = task_done
-
-    too_slow = False
-    if (task_done == len(lab.tasks)) and not lab.is_done:
-        end_time = datetime.now()
-        lab.end_time = end_time
-        lab.is_done = True
-        if lab.deadline < end_time.date():
-            too_slow = True
-
-        discipline = session.query(Discipline).get(
-            assig_discipline.discipline_id
+        res = await session.execute(
+            select(AssignedDiscipline).where(
+                and_(
+                    AssignedDiscipline.student_id == student.id,
+                    AssignedDiscipline.discipline_id == task_raw.discipline_id
+                )
+            )
         )
 
-        scale_point = 100.0 / discipline.max_tasks
-        lab_points = (task_done * scale_point)
-        if too_slow:
-            lab_points *= 0.5
+        assign_discipline: AssignedDiscipline = res.scalars.first()
 
-        assig_discipline.point += lab_points
+        hwork = utils.homeworks_from_json(assign_discipline.home_work)
 
-    assig_discipline.home_work = utils.homeworks_to_json(hwork)
-    session.commit()
-    session.close()
+        lab = None
+        for it in hwork.home_works:
+            if lab_report.lab_id == it.number:
+                lab = it
+                break
+
+        task_done = 0
+        for task in lab.tasks:
+            task_done += 1 if task.is_done else 0
+            for task_result in lab_report.tasks:
+                if task.number == task_result.task_id:
+                    task.amount_tries += 1
+                    task.last_try_time = task_result.time
+                    if not task.is_done and task_result.status:
+                        task.is_done = True
+                        task_done += 1
+
+        lab.tasks_completed = task_done
+
+        too_slow = False
+        if (task_done == len(lab.tasks)) and not lab.is_done:
+            end_time = datetime.now()
+            lab.end_time = end_time
+            lab.is_done = True
+            if lab.deadline < end_time.date():
+                too_slow = True
+
+            discipline: Discipline = await session.get(
+                Discipline, assign_discipline.discipline_id
+            )
+
+            scale_point = 100.0 / discipline.max_tasks
+            lab_points = (task_done * scale_point)
+            if too_slow:
+                lab_points *= 0.5
+
+            assign_discipline.point += lab_points
+
+        assign_discipline.home_work = utils.homeworks_to_json(hwork)
+        await session.commit()
+        await session.close()

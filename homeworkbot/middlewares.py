@@ -23,7 +23,7 @@ class BanMiddleware(BaseMiddleware):
     ) -> Any:
         # Если студент не находится в бан-листе,
         # то продолжаем обработку апдейта.
-        if not common_crud.is_ban(event.from_user.id):
+        if not await common_crud.is_ban(event.from_user.id):
             return await handler(event, data)
 
         # если студент - в бан-листе.

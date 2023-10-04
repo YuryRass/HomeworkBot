@@ -84,7 +84,7 @@ async def student_name_correct(message: Message, state: FSMContext):
 
     if fio_pattern.match(message.text):
         # получаем список всех групп
-        groups = admin_crud.get_all_groups()
+        groups = await admin_crud.get_all_groups()
 
         if len(groups) < 1:
             await message.answer(
@@ -140,7 +140,7 @@ async def callback_add_student(call: CallbackQuery, state: FSMContext):
         # добавляем студента
         case AddStudentStep.SAVE:
             student_name = await state.get_data()
-            admin_crud.add_student(
+            await admin_crud.add_student(
                 student_name['student_name'],
                 student_data.group_id,
             )

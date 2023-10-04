@@ -15,12 +15,12 @@ from testing_tools.answer.answer_processing import AnswerProcessing
 
 
 async def main():
-
     # Регистриуем роутеры в диспетчере
     fill.include_routers_in_dispatcher(dispatcher)
 
     # Пропускаем накопившиеся апдейты
     await bot.delete_webhook(drop_pending_updates=True)
+    await init_app()  # create databases
 
     # запускаем polling и систему проверки тестов в конкурентном режиме
     await asyncio.gather(
@@ -29,6 +29,4 @@ async def main():
     )
 
 if __name__ == '__main__':
-    init_app()
     asyncio.run(main())
-    a = Router

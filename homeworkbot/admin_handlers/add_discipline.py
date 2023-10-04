@@ -72,7 +72,7 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
         discipline = disciplines_works_from_json(downloaded_file.read())
 
         # добавляем дисциплину в таблицу
-        admin_crud.add_discipline(discipline)
+        await admin_crud.add_discipline(discipline)
 
         path = Path.cwd()  # текущий рабочий каталог
 

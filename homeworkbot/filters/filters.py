@@ -11,22 +11,22 @@ from database.main_db import admin_crud, teacher_crud, \
 
 class IsOnlyAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return admin_crud.is_admin(message.from_user.id)
+        return await admin_crud.is_admin(message.from_user.id)
 
 
 class IsNotOnlyAdmin(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return not admin_crud.is_admin(message.from_user.id)
+        return not await admin_crud.is_admin(message.from_user.id)
 
 
 class IsStudent(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return student_crud.is_student(message.from_user.id)
+        return await student_crud.is_student(message.from_user.id)
 
 
 class IsTeacher(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return teacher_crud.is_teacher(message.from_user.id)
+        return await teacher_crud.is_teacher(message.from_user.id)
 
 
 class IsOnlyAdminCommands(BaseFilter):
@@ -35,7 +35,7 @@ class IsOnlyAdminCommands(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:
         command: str = message.text
-        return admin_crud.is_admin_no_teacher_mode(message.from_user.id) \
+        return await admin_crud.is_admin_no_teacher_mode(message.from_user.id) \
             and command in self.admin_commands.values()
 
 
@@ -45,8 +45,9 @@ class IsOnlyTeacherCommands(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:
         command: str = message.text
-        is_only_teacher: bool = teacher_crud.is_teacher(message.from_user.id) or \
-            admin_crud.is_admin_with_teacher_mode(message.from_user.id)
+        is_only_teacher: bool = await teacher_crud.is_teacher(
+            message.from_user.id
+        ) or await admin_crud.is_admin_with_teacher_mode(message.from_user.id)
 
         return is_only_teacher and command in self.teacher_commands.values()
 
@@ -58,7 +59,7 @@ class IsOnlyStudentCommands(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         command: str = message.text
 
-        return student_crud.is_student(message.from_user.id) \
+        return await student_crud.is_student(message.from_user.id) \
             and command in self.student_commands.values()
 
 

@@ -68,7 +68,9 @@ async def teacher_id_correct(message: Message, state: FSMContext):
     """
     if message.text.isdigit():
         teacher_name = await state.get_data()
-        admin_crud.add_teacher(teacher_name['teacher_name'], int(message.text))
+        await admin_crud.add_teacher(
+            teacher_name['teacher_name'], int(message.text)
+        )
         await message.answer(text="Преподаватель успешно добавлен!")
         await state.clear()
     else:

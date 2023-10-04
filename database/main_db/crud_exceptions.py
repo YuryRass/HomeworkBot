@@ -2,6 +2,7 @@
     Модуль с объявлением возможных исключений при работе бота
 """
 
+
 class GroupNotFoundException(Exception):
     ...
 

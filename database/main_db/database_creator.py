@@ -19,33 +19,37 @@ from model.main_db.student_ban import StudentBan
 from database.main_db.database import create_tables, Session
 
 
-def create_main_tables(settings: DbCreatorSettings) -> None:
+async def create_main_tables(settings: DbCreatorSettings) -> None:
     """
         Создает и инициализирует основную БД
         Параметры:
         settings (DbCreatorSettings): настройки для первоначальной
     инициализации БД.
     """
+
     # Создание таблиц
-    create_tables()
+    await create_tables()
 
     # Если REMOTE_CONFIGURATION is False, то инициализируем БД
     # из конфиг. файлов settings.disciplines_path и settings.excel_data_path
     if not settings.remote_configuration:
-        fill_db_from_files(
+        await fill_db_from_files(
             settings.disciplines_path,
             settings.excel_data_path
         )
     # В противном случае добавляем в таблицу 'Admin' Telegram ID администратора
     else:
-        session = Session()
-        session.add(Admin(telegram_id=settings.default_admin))
-        session.commit()
-        session.close()
+        async with Session() as session:
+            async with session.begin():
+                session.add(Admin(telegram_id=settings.default_admin))
+                await session.commit()
+                await session.close()
 
 
-def fill_db_from_files(disciplines_path: str,
-                       excel_data_path: str) -> None:
+async def fill_db_from_files(
+    disciplines_path: str,
+    excel_data_path: str
+) -> None:
     """
     Функция для заполнения основной БД при локальной конфигурации
 
@@ -59,57 +63,64 @@ def fill_db_from_files(disciplines_path: str,
     disciplines: dict[str, Discipline] = {}
     groups: dict[str, Group] = {}
 
-    session = Session()
-    start_disciplines = configurator.disciplines
-    for it in start_disciplines:
-        disciplines[it.short_name] = Discipline(
-            full_name=it.full_name,
-            short_name=it.short_name,
-            path_to_test=it.path_to_test,
-            path_to_answer=it.path_to_answer,
-            language=it.language,
-            max_tasks=configurator.counting_tasks(it),
-            works=configurator.disciplines_works_to_json(it),
-            max_home_works=len(it.works)
-        )
-
-    temp_students: dict[str, list[Student]] = {}
-    for it in configurator.students_config:
-        for group_name, students_raw_list in configurator.students_config[it].items():
-            temp_students[it] = [
-                    Student(full_name=it.full_name) for it in students_raw_list
-                ]
-
-            groups[group_name] = Group(
-                group_name=group_name,
-                students=temp_students[it]
-            )
-            disciplines[it].groups.append(groups[group_name])
-
-    for dis, teacher_group in configurator.teachers_config.items():
-        for group_name, teachers_raw_list in teacher_group.items():
-
-            for teachers_raw in teachers_raw_list:
-                teacher = Teacher(
-                    full_name=teachers_raw.full_name,
-                    telegram_id=teachers_raw.telegram_id,
+    async with Session() as session:
+        async with session.begin():
+            start_disciplines = configurator.disciplines
+            for it in start_disciplines:
+                disciplines[it.short_name] = Discipline(
+                    full_name=it.full_name,
+                    short_name=it.short_name,
+                    path_to_test=it.path_to_test,
+                    path_to_answer=it.path_to_answer,
+                    language=it.language,
+                    max_tasks=configurator.counting_tasks(it),
+                    works=configurator.disciplines_works_to_json(it),
+                    max_home_works=len(it.works)
                 )
-                teacher.groups.append(groups[group_name])
-                disciplines[dis].teachers.append(teacher)
 
-                if teachers_raw.is_admin:
-                    session.add(Admin(telegram_id=teachers_raw.telegram_id))
+            temp_students: dict[str, list[Student]] = {}
+            for it in configurator.students_config:
+                for group_name, students_raw_list \
+                        in configurator.students_config[it].items():
+                    temp_students[it] = [
+                        Student(
+                            full_name=it.full_name, homeworks=[]
+                        ) for it in students_raw_list
+                    ]
 
-    session.add_all(disciplines.values())
-    session.flush()
-    for dis, student_list in temp_students.items():
-        for student in student_list:
-            student.homeworks.append(
-                AssignedDiscipline(
-                    discipline_id=disciplines[dis].id,
-                    home_work=configurator.create_empty_homework_json(dis)
-                )
-            )
+                    groups[group_name] = Group(
+                        group_name=group_name,
+                        students=temp_students[it]
+                    )
+                    disciplines[it].groups.append(groups[group_name])
 
-    session.commit()
-    session.close()
+            for dis, teacher_group in configurator.teachers_config.items():
+                for group_name, teachers_raw_list in teacher_group.items():
+
+                    for teachers_raw in teachers_raw_list:
+                        teacher = Teacher(
+                            full_name=teachers_raw.full_name,
+                            telegram_id=teachers_raw.telegram_id,
+                        )
+                        teacher.groups.append(groups[group_name])
+                        disciplines[dis].teachers.append(teacher)
+
+                        if teachers_raw.is_admin:
+                            session.add(
+                                Admin(telegram_id=teachers_raw.telegram_id))
+
+            session.add_all(disciplines.values())
+            await session.flush()
+
+            for dis, student_list in temp_students.items():
+                for student in student_list:
+                    student.homeworks.append(
+                        AssignedDiscipline(
+                            discipline_id=disciplines[dis].id,
+                            home_work=configurator.create_empty_homework_json(
+                                dis
+                            )
+                        )
+                    )
+            await session.commit()
+            await session.close()

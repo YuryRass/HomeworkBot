@@ -5,7 +5,8 @@
 
 from pathlib import Path
 
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy import inspect
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from database.main_db.database import engine as main_engine
 from database.main_db.database_creator import create_main_tables
@@ -16,24 +17,40 @@ from model.pydantic.db_creator_settings import DbCreatorSettings
 from config import settings
 
 
-def init_app() -> None:
+async def is_database_empty(engine: AsyncEngine) -> bool:
+    """Проверка на наличие таблиц в БД
+
+    Args:
+        engine (AsyncEngine): асинхронный движок
+
+    Returns:
+        bool: True, если БД пуста, False - в противном случае
+    """
+    async with engine.connect() as conn:
+        tables = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
+        return not tables
+
+
+async def init_app() -> None:
     """Создание и инициализация баз данных"""
 
-    # создание основной БД и добавление туда таблиц
-    if not database_exists(main_engine.url):
-        create_database(main_engine.url)
+    # если основная база данных пуста, то добавляем туда
+    # таблицы и инициализируем их
+    if await is_database_empty(main_engine):
         db_settings = DbCreatorSettings(
             settings.REMOTE_CONFIGURATION,
             settings.DEFAULT_ADMIN,
             settings.PATH_TO_DISCIPLINES_DATA,
             settings.PATH_TO_INITIALIZATION_DATA
         )
-        create_main_tables(db_settings)
+        await create_main_tables(db_settings)
 
-    # создание промежуточной БД и добавление туда таблиц
-    if not database_exists(queue_engine.url):
-        create_database(queue_engine.url)
-        create_queue_tables()
+    # если промежуточная база данных пуста, то добавляем туда
+    # таблицы и инициализируем их
+    if await is_database_empty(queue_engine):
+        await create_queue_tables()
 
     # создание директории для отчетов о студентах
     path = Path.cwd()

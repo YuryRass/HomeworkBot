@@ -3,8 +3,10 @@
     CRUD-операции, работающие с таблицами основной БД.
 """
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import delete, select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.main_db.database import Session
 from database.main_db.teacher_crud import is_teacher
@@ -34,127 +36,149 @@ from utils.disciplines_utils import (
 from config import settings
 
 
-def is_admin_no_teacher_mode(telegram_id: int) -> bool:
+async def is_admin_no_teacher_mode(telegram_id: int) -> bool:
     """
         Возвращает True, если Telegram ID принадлежит
         администратору, который не может работать в режиме препода.
         Параметры:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
-    with Session() as session:
-        admin = session.get(Admin, telegram_id)
+    session: AsyncSession
+    async with Session() as session:
+        admin = await session.get(Admin, telegram_id)
         if admin is None:
             return False
         return not admin.teacher_mode
 
 
-def is_admin_with_teacher_mode(telegram_id: int) -> bool:
+async def is_admin_with_teacher_mode(telegram_id: int) -> bool:
     """
         Возвращает True, если Telegram ID принадлежит
         администратору, который может работать в режиме препода.
         Параметры:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
-    with Session() as session:
-        admin = session.get(Admin, telegram_id)
+    session: AsyncSession
+    async with Session() as session:
+        admin = await session.get(Admin, telegram_id)
         if admin is None:
             return False
         return admin.teacher_mode
 
 
-def is_admin(telegram_id: int) -> bool:
+async def is_admin(telegram_id: int) -> bool:
     """
         Возвращает True, если Telegram ID принадлежит администратору.
         Параметры:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
-    with Session() as session:
-        admin = session.get(Admin, telegram_id)
+    session: AsyncSession
+    async with Session() as session:
+        admin = await session.get(Admin, telegram_id)
         return admin is not None
 
 
-def is_admin_and_teacher(telegram_id: int) -> bool:
+async def is_admin_and_teacher(telegram_id: int) -> bool:
     """
         Возвращает True, если Telegram ID принадлежит
         администратору и преподавателю.
         Параметры:
         telegram_id (int): идентификатор пользователя в телеграме.
     """
-    _is_admin = is_admin(telegram_id)
-    _is_teacher = is_teacher(telegram_id)
+    _is_admin: bool = await is_admin(telegram_id)
+    _is_teacher: bool = await is_teacher(telegram_id)
     return _is_admin and _is_teacher
 
 
-def add_chat(chat_id: int) -> None:
+async def add_chat(chat_id: int) -> None:
     """
         Добавление ID чата в таблицу Chat
     """
-
-    with Session() as session:
-        if not session.get(Chat, chat_id):
+    session: AsyncSession
+    async with Session() as session:
+        if not await session.get(Chat, chat_id):
             session.add(Chat(chat_id=chat_id))
-            session.commit()
+            await session.commit()
 
 
-def add_teacher(full_name: str, tg_id: int) -> None:
+async def add_teacher(full_name: str, tg_id: int) -> None:
     """
         Функция добавления преподавателя.
         Параметры:
         param full_name (str): ФИО препода.
         param tg_id (int): идентификатор препода в телегераме.
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         session.add(Teacher(full_name=full_name, telegram_id=tg_id))
-        session.commit()
+        await session.commit()
 
 
-def get_teachers() -> list[Teacher]:
+async def get_teachers() -> list[Teacher]:
     """
         Получение списка преподавателей
     """
-    with Session() as session:
-        return session.query(Teacher).all()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(Teacher))
+        return res.scalars().all()
 
 
-def get_not_assign_teacher_groups(teacher_id: int) -> list[Group]:
+async def get_not_assign_teacher_groups(teacher_id: int) -> list[Group]:
     """
         Возвращает список групп, которые не назначены преподу.
         Параметры:
         teacher_id (int): ID препода.
     """
-    with Session() as session:
-        teacher = session.get(Teacher, teacher_id)
-        assign_group = [it.id for it in teacher.groups]
-        smt = select(Group).where(
-            Group.id.not_in(assign_group)
+    session: AsyncSession
+    async with Session() as session:
+        # teacher: Teacher = await session.get(Teacher, teacher_id)
+        res = await session.execute(
+            select(Teacher).options(selectinload(Teacher.groups)).where(
+                Teacher.id == teacher_id
+            )
         )
-        return session.scalars(smt).all()
+        teacher = res.scalar()
+        assign_group = [it.id for it in teacher.groups]
+        smt = await session.execute(
+            select(Group).where(
+                Group.id.not_in(assign_group)
+            )
+        )
+        return smt.scalars().all()
 
 
-def assign_teacher_to_group(teacher_id: int, group_id: int) -> None:
+async def assign_teacher_to_group(teacher_id: int, group_id: int) -> None:
     """
         Назначает группу преподу.
         Параметры:
         teacher_id (int): ID препода.
         group_id (int): ID группы.
     """
-    with Session() as session:
-        teacher = session.get(Teacher, teacher_id)
-        teacher.groups.append(
-            session.get(Group, group_id)
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Teacher).options(selectinload(Teacher.groups)).where(
+                Teacher.id == teacher_id
+            )
         )
-        session.commit()
+        teacher: Teacher = res.scalar()
+        group: Group = await session.get(Group, group_id)
+        teacher.groups.append(group)
+        await session.commit()
 
 
-def get_all_groups() -> list[Group]:
+async def get_all_groups() -> list[Group]:
     """
         Возвращает список всех учебных групп.
     """
-    with Session() as session:
-        return session.query(Group).all()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(Group))
+        return res.scalars().all()
 
 
-def add_student(full_name: str, group_id: int):
+async def add_student(full_name: str, group_id: int):
     """
         Добавляет студента в БД, заполняя
     таблицы Student и AssignedDiscipline
@@ -162,36 +186,43 @@ def add_student(full_name: str, group_id: int):
         full_name (str): ФИО студента.
         group_id (int): ID группы.
     """
-    session = Session()
-    group: Group = session.get(Group, group_id)
 
-    student = Student(
-        full_name=full_name,
-        group_id=group_id,
-    )
-    group.students.append(student)
-    for discipline in group.disciplines:
-        empty_homework = create_homeworks(
-            disciplines_works_from_json(discipline.works)
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Group).where(Group.id == group_id)
         )
 
-        student.homeworks.append(
-            AssignedDiscipline(
-                discipline_id=discipline.id,
-                home_work=homeworks_to_json(empty_homework)
+        group: Group = res.scalar()
+
+        student = Student(
+            full_name=full_name,
+            group_id=group_id,
+        )
+        group.students.append(student)
+        for discipline in group.disciplines:
+            empty_homework = create_homeworks(
+                disciplines_works_from_json(discipline.works)
             )
-        )
-    session.commit()
-    session.close()
+
+            student.homeworks.append(
+                AssignedDiscipline(
+                    discipline_id=discipline.id,
+                    home_work=homeworks_to_json(empty_homework)
+                )
+            )
+        await session.commit()
+        await session.close()
 
 
-def add_discipline(discipline: DisciplineWorksConfig) -> None:
+async def add_discipline(discipline: DisciplineWorksConfig) -> None:
     """
         Добавление дисциплины в таблицу Discipline
         Параметры:
         discipline (DisciplineWorksConfig): добавляемая дисциплина.
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         session.add(
             Discipline(
                 full_name=discipline.full_name,
@@ -204,10 +235,10 @@ def add_discipline(discipline: DisciplineWorksConfig) -> None:
                 max_home_works=len(discipline.works)
             )
         )
-        session.commit()
+        await session.commit()
 
 
-def add_students_group(student_groups: list[StudentsGroup]) -> None:
+async def add_students_group(student_groups: list[StudentsGroup]) -> None:
     """
         Функция добавления групп студентов.
         Параметры:
@@ -218,68 +249,95 @@ def add_students_group(student_groups: list[StudentsGroup]) -> None:
         GroupAlreadyExistException: если группа с таким названием
         уже существует.
     """
-    session = Session()
-    session.begin()
-    try:
-        for it in student_groups:
-            group = Group(
-                group_name=it.group_name,
-                students=[
-                    Student(
-                        full_name=student_raw
-                    ) for student_raw in it.students
-                ]
-            )
-
-            for discipline in it.disciplines_short_name:
-                smt = select(Discipline).where(
-                    Discipline.short_name.ilike(f"%{discipline}%")
-                )
-                current_discipline = session.scalars(smt).first()
-                if current_discipline is None:
-                    raise DisciplineNotFoundException(f'{discipline} нет в БД')
-
-                group.disciplines.append(current_discipline)
-                empty_homework = create_homeworks(
-                    disciplines_works_from_json(current_discipline.works)
-                )
-                for student in group.students:
-                    student.homeworks.append(
-                        AssignedDiscipline(
-                            discipline_id=current_discipline.id,
-                            home_work=homeworks_to_json(empty_homework)
-                        )
+    session: AsyncSession
+    async with Session() as session:
+        async with session.begin():
+            try:
+                for it in student_groups:
+                    group = Group(
+                        group_name=it.group_name,
+                        students=[
+                            Student(
+                                full_name=student_raw,
+                                homeworks=[]
+                            ) for student_raw in it.students
+                        ],
+                        disciplines=[]
                     )
-            session.add(group)
-        session.commit()
-    except DisciplineNotFoundException as ex:
-        session.rollback()
-        raise ex
-    except IntegrityError as ex:
-        session.rollback()
-        raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
-    finally:
-        session.close()
+
+                    for discipline in it.disciplines_short_name:
+                        smt = (
+                            select(Discipline).
+                            # options(selectinload(Discipline.groups)).
+                            where(
+                                Discipline.short_name.ilike(f"%{discipline}%")
+                            )
+                        )
+                        res = await session.execute(smt)
+                        current_discipline: Discipline | None = \
+                            res.scalars().first()
+                        if current_discipline is None:
+                            raise DisciplineNotFoundException(
+                                f'{discipline} нет в БД'
+                            )
+
+                        group.disciplines.append(current_discipline)
+
+                        empty_homework = create_homeworks(
+                            disciplines_works_from_json(
+                                current_discipline.works
+                            )
+                        )
+                        for student in group.students:
+                            student.homeworks.append(
+                                AssignedDiscipline(
+                                    discipline_id=current_discipline.id,
+                                    home_work=homeworks_to_json(empty_homework)
+                                )
+                            )
+
+                    session.add(group)
+                    # current_discipline.groups.append(group)
+                await session.commit()
+            except DisciplineNotFoundException as ex:
+                await session.rollback()
+                raise ex
+            except IntegrityError as ex:
+                await session.rollback()
+                raise GroupAlreadyExistException(
+                    f'{ex.params} уже существует'
+                )
+            finally:
+                await session.close()
 
 
-def assign_teacher_to_discipline(teacher_id: int, discipline_id: int) -> None:
-    """Функция назначает преподу дисицплину.
+async def assign_teacher_to_discipline(
+    teacher_id: int, discipline_id: int
+) -> None:
+    """Функция назначает преподу дисциплину.
 
     Args:
         teacher_id (int): ID препода.
 
         discipline_id (int): ID дисциплины.
     """
-
-    with Session() as session:
-        teacher = session.get(Teacher, teacher_id)
-        teacher.disciplines.append(
-            session.get(Discipline, discipline_id)
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Teacher).options(
+                selectinload(Teacher.disciplines)
+            ).where(Teacher.id == teacher_id)
         )
-        session.commit()
+        teacher: Teacher = res.scalar()
+        discipline: Discipline = await session.get(Discipline, discipline_id)
+
+        teacher.disciplines.append(discipline)
+        await session.commit()
 
 
-def get_not_assign_teacher_disciplines(teacher_id: int) -> list[Discipline]:
+async def get_not_assign_teacher_disciplines(
+    teacher_id: int
+) -> list[Discipline]:
     """Получить список учебных дисциплин, не назначенных преподу.
 
     Args:
@@ -288,63 +346,78 @@ def get_not_assign_teacher_disciplines(teacher_id: int) -> list[Discipline]:
     Returns:
         list[Discipline]: список дисциплин.
     """
-
-    with Session() as session:
-        teacher = session.get(Teacher, teacher_id)
-        assign_discipline = [it.id for it in teacher.disciplines]
-        smt = select(Discipline).where(
-            Discipline.id.not_in(assign_discipline)
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(
+            select(Teacher).options(
+                selectinload(Teacher.disciplines)
+            ).where(Teacher.id == teacher_id)
         )
-        return session.scalars(smt).all()
+        teacher: Teacher = res.scalar()
+        assign_discipline = [it.id for it in teacher.disciplines]
+        smt = await session.execute(
+            select(Discipline).where(
+                Discipline.id.not_in(assign_discipline)
+            )
+        )
+        not_assign_teacher_disciplines: list[Discipline] = \
+            smt.scalars().all()
+
+        return not_assign_teacher_disciplines
 
 
-def delete_group(group_id: int) -> None:
+async def delete_group(group_id: int) -> None:
     """Осуществялет удаление учебной группы по её ID из основной БД.
 
     Args:
         group_id (int): ID группы.
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         smt = delete(Group).where(Group.id == group_id)
-        session.execute(smt)
-        session.commit()
+        await session.execute(smt)
+        await session.commit()
 
 
-def delete_student(student_id: int) -> None:
+async def delete_student(student_id: int) -> None:
     """Осуществялет удаление студента по его ID из основной БД.
 
     Args:
         student_id (int): ID студента.
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         smt = delete(Student).where(Student.id == student_id)
-        session.execute(smt)
-        session.commit()
+        await session.execute(smt)
+        await session.commit()
 
 
-def delete_teacher(teacher_id: int) -> None:
+async def delete_teacher(teacher_id: int) -> None:
     """Осуществялет удаление препода по его ID из основной БД.
 
     Args:
         teacher_id (int): ID препода.
     """
-    with Session() as session:
+    session: AsyncSession
+    async with Session() as session:
         smt = delete(Teacher).where(Teacher.id == teacher_id)
-        session.execute(smt)
-        session.commit()
+        await session.execute(smt)
+        await session.commit()
 
 
-def get_all_disciplines() -> list[Discipline]:
+async def get_all_disciplines() -> list[Discipline]:
     """Возвращает список всех дисциплин, которые имеются в таблице.
 
     Returns:
         list[Discipline]: список дисциплин.
     """
-    with Session() as session:
-        return session.query(Discipline).all()
+    session: AsyncSession
+    async with Session() as session:
+        res = await session.execute(select(Discipline))
+        return res.scalars().all()
 
 
-def get_discipline(discipline_id: int) -> Discipline:
+async def get_discipline(discipline_id: int) -> Discipline:
     """Возвращает дисциплину по ее ID.
 
     Args:
@@ -353,11 +426,13 @@ def get_discipline(discipline_id: int) -> Discipline:
     Returns:
         Discipline: дисциплина.
     """
-    with Session() as session:
-        return session.query(Discipline).get(discipline_id)
+    session: AsyncSession
+    async with Session() as session:
+        d: Discipline = await session.get(Discipline, discipline_id)
+        return d
 
 
-def remote_start_db_fill(data: DbStartData) -> None:
+async def remote_start_db_fill(data: DbStartData) -> None:
     """
     Функция для стартовой конфигурации системы через загрузку json-файла
 
@@ -372,116 +447,130 @@ def remote_start_db_fill(data: DbStartData) -> None:
 
     :return: None
     """
-    session = Session()
-    session.begin()
-    admin_default_tg = settings.DEFAULT_ADMIN
-    disciplines: dict[str, Discipline] = {}
-    groups: dict[str, Group] = {}
+    session: AsyncSession
+    async with Session() as session:
+        async with session.begin():
+            admin_default_tg = settings.DEFAULT_ADMIN
+            disciplines: dict[str, Discipline] = {}
+            groups: dict[str, Group] = {}
 
-    try:
-        for discipline in data.disciplines:
-            if discipline.short_name in disciplines:
-                raise DisciplineAlreadyExistException(
-                    f"{discipline.short_name} дублируется"
-                )
-            dis = Discipline(
-                full_name=discipline.full_name,
-                short_name=discipline.short_name,
-                path_to_test=discipline.path_to_test,
-                path_to_answer=discipline.path_to_answer,
-                works=disciplines_works_to_json(discipline),
-                language=discipline.language,
-                max_tasks=counting_tasks(discipline),
-                max_home_works=len(discipline.works)
-            )
-            disciplines[discipline.short_name] = dis
-
-        session.add_all(disciplines.values())
-        session.flush()
-
-        for it in data.groups:
-            group = Group(
-                group_name=it.group_name,
-                students=[
-                    Student(full_name=student_raw)
-                    for student_raw in it.students
-                ]
-            )
-            groups[it.group_name] = group
-
-            for name in it.disciplines_short_name:
-                if name not in disciplines:
-                    raise DisciplineNotFoundException(f'{name} нет в БД')
-
-                empty_homework = create_homeworks(
-                    disciplines_works_from_json(disciplines[name].works)
-                )
-                disciplines[name].groups.append(
-                    groups[it.group_name]
-                )
-
-                for student in groups[it.group_name].students:
-                    student.homeworks.append(
-                        AssignedDiscipline(
-                            discipline_id=disciplines[name].id,
-                            home_work=homeworks_to_json(empty_homework)
+            try:
+                for discipline in data.disciplines:
+                    if discipline.short_name in disciplines:
+                        raise DisciplineAlreadyExistException(
+                            f"{discipline.short_name} дублируется"
                         )
+                    dis = Discipline(
+                        full_name=discipline.full_name,
+                        short_name=discipline.short_name,
+                        path_to_test=discipline.path_to_test,
+                        path_to_answer=discipline.path_to_answer,
+                        works=disciplines_works_to_json(discipline),
+                        language=discipline.language,
+                        max_tasks=counting_tasks(discipline),
+                        max_home_works=len(discipline.works),
+                        groups=[]
+                    )
+                    disciplines[discipline.short_name] = dis
+
+                session.add_all(disciplines.values())
+                session.flush()
+
+                for it in data.groups:
+                    group = Group(
+                        group_name=it.group_name,
+                        students=[
+                            Student(
+                                full_name=student_raw,
+                                homeworks=[]
+                            )
+                            for student_raw in it.students
+                        ]
+                    )
+                    groups[it.group_name] = group
+
+                    for name in it.disciplines_short_name:
+                        if name not in disciplines:
+                            raise DisciplineNotFoundException(
+                                f'{name} нет в БД'
+                            )
+
+                        empty_homework = create_homeworks(
+                            disciplines_works_from_json(
+                                disciplines[name].works
+                            )
+                        )
+                        disciplines[name].groups.append(
+                            groups[it.group_name]
+                        )
+
+                        for student in groups[it.group_name].students:
+                            student.homeworks.append(
+                                AssignedDiscipline(
+                                    discipline_id=disciplines[name].id,
+                                    home_work=homeworks_to_json(empty_homework)
+                                )
+                            )
+
+                for it in data.teachers:
+                    teacher = Teacher(
+                        full_name=it.full_name,
+                        telegram_id=it.telegram_id,
+                        groups=[],
+                        disciplines=[]
                     )
 
-        for it in data.teachers:
-            teacher = Teacher(
-                full_name=it.full_name,
-                telegram_id=it.telegram_id
-            )
+                    for tgr in it.assign_groups:
+                        if tgr not in groups:
+                            raise GroupNotFoundException(
+                                f'Группа {tgr} не найдена')
+                        teacher.groups.append(groups[tgr])
 
-            for tgr in it.assign_groups:
-                if tgr not in groups:
-                    raise GroupNotFoundException(f'Группа {tgr} не найдена')
-                teacher.groups.append(groups[tgr])
+                    for tdis in it.assign_disciplines:
+                        if tdis not in disciplines:
+                            raise DisciplineNotFoundException(
+                                f'Дисциплина {tdis} не найдена'
+                            )
+                        teacher.disciplines.append(disciplines[tdis])
 
-            for tdis in it.assign_disciplines:
-                if tdis not in disciplines:
-                    raise DisciplineNotFoundException(
-                        f'Дисциплина {tdis} не найдена'
+                    if it.is_admin and teacher.telegram_id != admin_default_tg:
+                        session.add(
+                            Admin(
+                                telegram_id=teacher.telegram_id
+                            )
+                        )
+                    session.add(teacher)
+
+                for chat in data.chats:
+                    session.add(
+                        Chat(chat_id=chat)
                     )
-                teacher.disciplines.append(disciplines[tdis])
-
-            if it.is_admin and teacher.telegram_id != admin_default_tg:
-                session.add(
-                    Admin(
-                        telegram_id=teacher.telegram_id
-                    )
-                )
-            session.add(teacher)
-
-        for chat in data.chats:
-            session.add(
-                Chat(chat_id=chat)
-            )
-        session.commit()
-    except DisciplineNotFoundException as ex:
-        session.rollback()
-        raise ex
-    except DisciplineAlreadyExistException as daex:
-        session.rollback()
-        raise daex
-    except GroupNotFoundException as gnfex:
-        session.rollback()
-        raise gnfex
-    except IntegrityError as ex:
-        session.rollback()
-        raise GroupAlreadyExistException(f'{ex.params[0]} уже существует')
-    finally:
-        session.close()
+                await session.commit()
+            except DisciplineNotFoundException as ex:
+                await session.rollback()
+                raise ex
+            except DisciplineAlreadyExistException as daex:
+                await session.rollback()
+                raise daex
+            except GroupNotFoundException as gnfex:
+                await session.rollback()
+                raise gnfex
+            except IntegrityError as ex:
+                await session.rollback()
+                raise GroupAlreadyExistException(
+                    f'{ex.params[0]} уже существует')
+            finally:
+                await session.close()
 
 
-def switch_admin_mode_to_teacher(admin_id: int) -> None:
+async def switch_admin_mode_to_teacher(admin_id: int) -> None:
     """Функция переключает с режима админа на режим препода.
 
     Args:
         admin_id (int): ID админа.
     """
-    with Session() as session:
-        admin = session.get(Admin, admin_id)
+    session: AsyncSession
+    async with Session() as session:
+        admin = await session.get(Admin, admin_id)
         admin.teacher_mode = True
-        session.commit()
+        await session.commit()

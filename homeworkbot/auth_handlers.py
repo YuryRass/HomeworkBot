@@ -77,12 +77,12 @@ async def process_start_command(message: Message):
     # на обработку его персональных данных. Если пользователь еще
     # не подписан на Tg-канал, то бот выведет соответсвующее сообщение,
     # чтобы пользователь подписался на канал.
-    user = common_crud.user_verification(message.from_user.id)
+    user: UserEnum = await common_crud.user_verification(message.from_user.id)
     match user:
         case UserEnum.Admin:
             await message.answer(
                 text=bot_auth_messages[BotAuthUsers.ADMIN_AUTH_ANSWER],
-                reply_markup=admin_keyboard(message)
+                reply_markup=(await admin_keyboard(message))
             )
         case UserEnum.Teacher:
             await message.answer(
@@ -95,7 +95,7 @@ async def process_start_command(message: Message):
                 reply_markup=student_keyboard()
             )
         case _:
-            chats = common_crud.get_chats()
+            chats = await common_crud.get_chats()
             user_in_chat = False
             for chat_id in chats:
                 user_in_chat = await is_subscribed(

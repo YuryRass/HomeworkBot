@@ -1,60 +1,67 @@
 """Модуль реализует CRUD-операции с промежуточной таблицей QueueOut"""
 
-import json
-
-from pydantic.json import pydantic_encoder
-
+from sqlalchemy import select, delete
+from sqlalchemy.ext.asyncio import AsyncSession
 from database.queue_db.database import Session
 from model.pydantic.queue_out_raw import TestResult
 from model.queue_db.queue_out import QueueOut
 
 
-def is_empty() -> bool:
+async def is_empty() -> bool:
     """Проверка на пустоту таблицы QueueOut.
 
     Returns:
         bool: True, если таблица пустая.
     """
-    with Session() as session:
-        data = session.query(QueueOut).first()
-        return data is None
+    session: AsyncSession
+    async with Session() as session:
+        result = await session.execute(select(QueueOut))
+        data: list[QueueOut] | [] = result.scalars().first()
+        return not data
 
 
-def is_not_empty() -> bool:
+async def is_not_empty() -> bool:
     """Проверяет таблицу QueueOut на наличие в ней записей.
 
     Returns:
         bool: True, если таблица непустая.
     """
-    with Session() as session:
-        data = session.query(QueueOut).first()
-        return data is not None
+    session: AsyncSession
+    async with Session() as session:
+        result = await session.execute(select(QueueOut))
+        data: list[QueueOut] | [] = result.scalars().first()
+        return bool(data)
 
 
-def get_all_records() -> list[QueueOut]:
+async def get_all_records() -> list[QueueOut]:
     """Возвращает список всех записей таблицы QueueOut.
 
     Returns:
         list[QueueOut]: список записей таблицы QueueOut.
     """
-    with Session() as session:
-        return session.query(QueueOut).all()
+    # addresses = (await session.scalars(user.addresses.statement)).all()
+    session: AsyncSession
+    async with Session() as session:
+        result = await session.execute(select(QueueOut))
+        data: list[QueueOut] = result.scalars().all()
+        return data
 
 
-def delete_record(record_id: int) -> None:
+async def delete_record(record_id: int) -> None:
     """Удаление записи по ее ID в таблице QueueOut.
 
     Args:
         record_id (int): ID записи.
     """
-    with Session() as session:
-        session.query(QueueOut).filter(
-            QueueOut.id == record_id
-        ).delete(synchronize_session='fetch')
-        session.commit()
+    session: AsyncSession
+    async with Session() as session:
+        await session.execute(
+            delete(QueueOut).where(QueueOut.id == record_id)
+        )
+        await session.commit()
 
 
-def add_record(user_tg_id: int, chat_id: int, data: TestResult) -> None:
+async def add_record(user_tg_id: int, chat_id: int, data: TestResult) -> None:
     """Добавление записи в таблицу QueueOut.
 
     Args:
@@ -63,24 +70,17 @@ def add_record(user_tg_id: int, chat_id: int, data: TestResult) -> None:
         data (TestResult): pydantic-данные о результататх тестирования.
     """
 
-    session = Session()
-
     # конвертируем pydantic данные в JSON формат
-    json_data = json.dumps(
-        data,
-        sort_keys=False,
-        indent=4,
-        ensure_ascii=False,
-        separators=(',', ': '),
-        default=pydantic_encoder
-    )
+    json_data: str = data.model_dump_json(indent=4, exclude_none=True)
 
-    session.add(
-                QueueOut(
-                    telegram_id=user_tg_id,
-                    chat_id=chat_id,
-                    data=json_data
-                )
+    session: AsyncSession
+    async with Session() as session:
+        session.add(
+            QueueOut(
+                telegram_id=user_tg_id,
+                chat_id=chat_id,
+                data=json_data
             )
-    session.commit()
-    session.close()
+        )
+        await session.commit()
+        await session.close()

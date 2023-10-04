@@ -68,7 +68,7 @@ async def handle_upload_students_group(message: Message, state: FSMContext):
 
         try:
             # добавляем группы студентов в БД
-            admin_crud.add_students_group(groups_list)
+            await admin_crud.add_students_group(groups_list)
 
             # оповещаем о завершении загрузки файла
             await finish_upload_file_message(

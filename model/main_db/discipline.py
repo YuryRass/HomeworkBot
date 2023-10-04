@@ -1,4 +1,4 @@
-from typing import List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String, JSON
 from sqlalchemy.orm import Mapped, relationship, mapped_column
@@ -6,6 +6,10 @@ from sqlalchemy.orm import Mapped, relationship, mapped_column
 from database.main_db.database import Base
 from model.main_db.discipline_group import association_discipline_to_group
 from model.main_db.teacher_discipline import association_teacher_to_discipline
+
+if TYPE_CHECKING:
+    from model.main_db.group import Group
+    from model.main_db.teacher import Teacher
 
 
 class Discipline(Base):
@@ -19,14 +23,14 @@ class Discipline(Base):
     language: Mapped[str] = mapped_column(String(10), nullable=False)
     max_tasks: Mapped[int] = mapped_column(nullable=False)
     max_home_works: Mapped[int] = mapped_column(nullable=False)
-    works: Mapped[str] = mapped_column(JSON, nullable=False)  # DisciplineWorksConfig
+    works: Mapped[str] = mapped_column(JSON, nullable=False)
 
-    groups: Mapped[List["Group"]] = relationship(
+    groups: Mapped[list["Group"]] = relationship(
         secondary=association_discipline_to_group,
         back_populates="disciplines",
     )
 
-    teachers: Mapped[List["Teacher"]] = relationship(
+    teachers: Mapped[list["Teacher"]] = relationship(
         secondary=association_teacher_to_discipline,
         back_populates="disciplines",
     )
