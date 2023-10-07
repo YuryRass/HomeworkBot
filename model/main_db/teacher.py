@@ -1,9 +1,9 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database.main_db.database import Base
+from database.main_db.database import Base, bigint
 from model.main_db.teacher_discipline import association_teacher_to_discipline
 from model.main_db.teacher_group import association_teacher_to_group
 
@@ -17,15 +17,14 @@ class Teacher(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
-    telegram_id: Mapped[int] = mapped_column(
-        Integer, nullable=False, unique=True)
+    telegram_id: Mapped[bigint] = mapped_column(nullable=False, unique=True)
 
-    disciplines: Mapped[List["Discipline"]] = relationship(
+    disciplines: Mapped[list["Discipline"]] = relationship(
         secondary=association_teacher_to_discipline,
         back_populates="teachers",
     )
 
-    groups: Mapped[List["Group"]] = relationship(
+    groups: Mapped[list["Group"]] = relationship(
         secondary=association_teacher_to_group,
         back_populates="teachers",
     )

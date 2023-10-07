@@ -309,7 +309,7 @@ async def handle_commands(message: Message, state: FSMContext):
         case AdminCommand.UPLOAD_CONFIGURATION:
             await _handle_upload_start_configuration(message, state)
         case AdminCommand.SWITCH_TO_TEACHER:
-            admin_crud.switch_admin_mode_to_teacher(message.from_user.id)
+            await admin_crud.switch_admin_mode_to_teacher(message.from_user.id)
             await switch_admin_to_teacher_menu(message)
         case AdminCommand.DOWNLOAD_FULL_REPORT:
             await create_groups_button(message, 'fullReport')
@@ -333,5 +333,5 @@ async def switch_admin_to_teacher_menu(message: Message):
     await message.answer(
         text="Переключение в режим преподавателя",
         disable_web_page_preview=True,
-        reply_markup=create_teacher_keyboard(message),
+        reply_markup=(await create_teacher_keyboard(message)),
     )

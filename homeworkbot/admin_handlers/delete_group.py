@@ -29,5 +29,5 @@ async def callback_delete_group(call: CallbackQuery):
         call (CallbackQuery): callback.
     """
     group_id: int = int(call.data.split('_')[1])
-    admin_crud.delete_group(group_id)
+    await admin_crud.delete_group(group_id)
     await call.message.edit_text(text="Выбранная группа успешно удалена!")

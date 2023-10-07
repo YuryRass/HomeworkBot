@@ -188,7 +188,7 @@ async def get_students_from_group_for_ban(group_id: int) -> list[Student]:
             )
         )
         res = await session.execute(smt)
-        students: list[Student] = res.scalars.all()
+        students: list[Student] = res.scalars().all()
         return students
 
 

@@ -48,11 +48,11 @@ async def callback_assign_teacher_to_group(call: CallbackQuery):
         case 'assignTeacherGR':
             teacher_id = int(call.data.split('_')[1])
             # группы, не назначенные преподу с ID = teacher_id
-            groups = admin_crud.get_not_assign_teacher_groups(teacher_id)
+            groups = await admin_crud.get_not_assign_teacher_groups(teacher_id)
             if len(groups) < 1:
                 await call.message.edit_text(
-                    text="В БД отсутствуют группы,' + \
-                        ' куда можно добавить студента!"
+                    text='В БД отсутствуют группы,' +
+                    ' куда можно добавить студента!'
                 )
                 return
             # создание инлаин-кнопок с названиями групп
@@ -74,7 +74,7 @@ async def callback_assign_teacher_to_group(call: CallbackQuery):
             group_id = call.data.split('_')[1]
             teacher_id = call.data.split('_')[2]
             # назначаем преподу группу
-            admin_crud.assign_teacher_to_group(int(teacher_id), int(group_id))
+            await admin_crud.assign_teacher_to_group(int(teacher_id), int(group_id))
             await call.message.edit_text(
                 text="Преподаватель назначен группе"
             )

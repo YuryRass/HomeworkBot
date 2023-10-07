@@ -13,7 +13,7 @@ async def create_teacher_groups_button(message: Message, callback_prefix: str):
         message (Message): Tg сообщение.
         callback_prefix (str): префикс коллбэка.
     """
-    groups = teacher_crud.get_assign_groups(message.from_user.id)
+    groups = await teacher_crud.get_assign_groups(message.from_user.id)
 
     if len(groups) < 1:
         await message.answer(text="В БД отсутствуют группы!")
@@ -42,7 +42,7 @@ async def create_teacher_discipline_button(
         message (Message): Tg сообщение.
         callback_prefix (str): префикс коллбэка.
     """
-    disciplines = teacher_crud.get_teacher_disciplines(message.from_user.id)
+    disciplines = await teacher_crud.get_teacher_disciplines(message.from_user.id)
     if len(disciplines) < 1:
         await message.answer(text="В БД отсутствуют дисциплины!")
         return

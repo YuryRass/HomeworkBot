@@ -50,7 +50,7 @@ __teacher_commands = {
 }
 
 
-def create_teacher_keyboard(
+async def create_teacher_keyboard(
     message: Message | None = None
 ) -> ReplyKeyboardMarkup:
     """Функция создает главную клавиатуру препода.
@@ -92,7 +92,7 @@ def create_teacher_keyboard(
         KeyboardButton(text=__teacher_commands[TeacherCommand.UNBAN_STUDENT]),
     ]
 
-    if is_admin(message.from_user.id):
+    if await is_admin(message.from_user.id):
         footer_buttons.append(
             KeyboardButton(
                 text=__teacher_commands[TeacherCommand.SWITCH_TO_ADMIN]
@@ -140,13 +140,13 @@ async def switch_teacher_to_admin_menu(message: Message):
     """
 
     # делаем изменение в БД
-    teacher_crud.switch_teacher_mode_to_admin(message.from_user.id)
+    await teacher_crud.switch_teacher_mode_to_admin(message.from_user.id)
 
     await message.answer(
         text='Переключение в режим админа',
         parse_mode='HTML',
         disable_web_page_preview=True,
-        reply_markup=admin_keyboard.first_admin_keyboard(message),
+        reply_markup=(await admin_keyboard.first_admin_keyboard(message)),
     )
 
 

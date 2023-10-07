@@ -42,7 +42,7 @@ async def callback_interactive_report(call: CallbackQuery):
         case 'interactiveGrRep':
             await call.message.edit_text(text="Выберете учебную группу")
             group_id = int(call.data.split('_')[1])
-            disciplines = teacher_crud.get_assign_group_discipline(
+            disciplines = await teacher_crud.get_assign_group_discipline(
                 call.from_user.id,
                 group_id
             )
@@ -66,7 +66,7 @@ async def callback_interactive_report(call: CallbackQuery):
         case 'interactiveDisRep':
             group_id = int(call.data.split('_')[1])
             discipline_id = int(call.data.split('_')[2])
-            students = teacher_crud.get_auth_students(group_id)
+            students = await teacher_crud.get_auth_students(group_id)
             if len(students) < 1:
                 await call.message.edit_text(
                     text="В группе нет авторизованных студентов"
@@ -110,9 +110,7 @@ async def __create_report(
     )
 
     report = await asyncio.gather(
-        asyncio.to_thread(
-            run_interactive_report_builder, student_id, discipline_id
-        )
+        run_interactive_report_builder(student_id, discipline_id)
     )
 
     student_report: StudentReport = report[0]

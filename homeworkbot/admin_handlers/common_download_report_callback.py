@@ -1,5 +1,4 @@
 """Модуль анализа callback-ов по созданию отчетов по учебным дисциплинам"""
-import asyncio
 import pathlib
 
 from aiogram.types import CallbackQuery, InlineKeyboardButton
@@ -9,7 +8,8 @@ from aiogram.types.input_file import FSInputFile
 from database.main_db import admin_crud, teacher_crud, common_crud
 from homeworkbot import bot
 from homeworkbot.routers import common_router
-from reports.run_report_builder import ReportBuilderTypeEnum, run_report_builder
+from reports.run_report_builder import \
+    ReportBuilderTypeEnum, run_report_builder
 
 # префиксы для callback-ов по созданию отчетов
 __report_prefix = [
@@ -67,19 +67,21 @@ async def callback_download_full_report(call: CallbackQuery):
 
             # если tg пользователь - админ без прав на препода, то
             # получаем весь список дисциплин для выбранной группы.
-            if admin_crud.is_admin_no_teacher_mode(call.from_user.id):
-                disciplines = common_crud.get_group_disciplines(group_id)
+            if await admin_crud.is_admin_no_teacher_mode(call.from_user.id):
+                disciplines = await common_crud.get_group_disciplines(group_id)
 
             # в противном случае получаем те дисциплины, которые назначены преподу
             # для выбранной учебной группы.
             else:
-                disciplines = teacher_crud.get_assign_group_discipline(
+                disciplines = await teacher_crud.get_assign_group_discipline(
                     call.from_user.id,
                     group_id
                 )
             # если список дисциплин пуст
             if len(disciplines) == 0:
-                await call.message.edit_text(text="За группой не числится дисциплин")
+                await call.message.edit_text(
+                    text="За группой не числится дисциплин"
+                )
 
             # если кол-во дисциплин > 1, то предоставляем право выбора одной из них
             elif len(disciplines) > 1:
@@ -107,7 +109,10 @@ async def callback_download_full_report(call: CallbackQuery):
         case 'fullGrReport' | 'finishGrReport' | 'shortGrReport':
             group_id = int(call.data.split('_')[1])
             discipline_id = int(call.data.split('_')[2])
-            await __create_report(call, group_id, discipline_id, __reports_builder_type[type_callback])
+            await __create_report(
+                call, group_id, discipline_id,
+                __reports_builder_type[type_callback]
+            )
 
         case _:
             await call.message.edit_text(
@@ -132,16 +137,14 @@ async def __create_report(
     """
     await call.message.edit_text(text="Начинаем формировать отчет")
 
-    # формируем отчет об успеваемости студентов в отдельном потоке
-    # в неблокирующем режиме.
-    path_to_report = await asyncio.gather(
-        asyncio.to_thread(run_report_builder, group_id,
-                          discipline_id, builder_type)
+    # формируем отчет об успеваемости студентов
+    path_to_report: str = await run_report_builder(
+        group_id, discipline_id, builder_type
     )
 
     await call.message.edit_text(text="Отчет успешно сформирован")
 
     await bot.send_document(
         call.message.chat.id,
-        FSInputFile(pathlib.Path(path_to_report[0]))
+        FSInputFile(pathlib.Path(path_to_report))
     )

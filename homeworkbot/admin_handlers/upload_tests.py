@@ -7,11 +7,13 @@ from aiogram import F
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, Message, CallbackQuery, ContentType
+from aiogram.types import \
+    InlineKeyboardButton, Message, CallbackQuery, ContentType
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command, StateFilter
 
-from homeworkbot.admin_handlers.utils import start_upload_file_message, finish_upload_file_message
+from homeworkbot.admin_handlers.utils import \
+    start_upload_file_message, finish_upload_file_message
 from homeworkbot.configuration import bot
 from homeworkbot.routers import admin_router
 from homeworkbot.filters import IsNotOnlyAdmin, IsOnlyAdmin
@@ -42,7 +44,7 @@ async def _handle_upload_tests(message: Message):
         message (Message): сообщение Tg пользователя.
     """
     # список всех дисциплин
-    disciplines = admin_crud.get_all_disciplines()
+    disciplines = await admin_crud.get_all_disciplines()
     if len(disciplines) < 1:
         await message.answer(text="В БД отсутствуют данные по дисциплинам!")
         return
@@ -74,10 +76,15 @@ async def callback_upload_tests(call: CallbackQuery, state: FSMContext):
             await state.set_state(state=AdminState.upload_test)
             await state.update_data(id=int(call.data.split('_')[1]))
         case _:
-            await call.message.edit_text(text="Неизвестный формат для обработки данных")
+            await call.message.edit_text(
+                text="Неизвестный формат для обработки данных"
+            )
 
 
-@admin_router.message(StateFilter(AdminState.upload_test), F.content_type == ContentType.DOCUMENT)
+@admin_router.message(
+    StateFilter(AdminState.upload_test),
+    F.content_type == ContentType.DOCUMENT
+)
 async def handle_upload_zip_tests(message: Message, state: FSMContext):
     """Обработчик по загрузке архива с тестами.
 
@@ -99,15 +106,18 @@ async def handle_upload_zip_tests(message: Message, state: FSMContext):
         downloaded_file = await bot.download_file(file_info.file_path)
 
         # сохраняем файлы с тестами
-        discipline = admin_crud.get_discipline(discipline_id)
+        discipline = await admin_crud.get_discipline(discipline_id)
         discipline_path_to_test: str = discipline.path_to_test
         try:
-            await save_test_files(discipline_path_to_test, downloaded_file.read())
+            await save_test_files(
+                discipline_path_to_test, downloaded_file.read()
+            )
 
             # сообщение о загрузке тестов
             await finish_upload_file_message(
                 result_message,
-                f'<i>Тесты по дисциплине "{discipline.short_name}" загружены!</i>'
+                '<i>Тесты по дисциплине ' +
+                f'"{discipline.short_name}" загружены!</i>'
             )
             await state.clear()
 

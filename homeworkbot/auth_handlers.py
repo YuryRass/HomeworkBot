@@ -87,7 +87,7 @@ async def process_start_command(message: Message):
         case UserEnum.Teacher:
             await message.answer(
                 text=bot_auth_messages[BotAuthUsers.TEACHER_AUTH_ANSWER],
-                reply_markup=create_teacher_keyboard(message)
+                reply_markup=(await create_teacher_keyboard(message))
             )
         case UserEnum.Student:
             await message.answer(

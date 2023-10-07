@@ -15,7 +15,7 @@ async def main():
 
     temp_path = Path.cwd()
     temp_path = Path(temp_path.joinpath(settings.TEMP_REPORT_DIR))
-    dockers_run = int(settings.AMOUNT_DOKER_RUN)
+    dockers_run = settings.AMOUNT_DOKER_RUN
 
     # Регистриуем роутеры в диспетчере
     fill.include_routers_in_dispatcher(dispatcher)

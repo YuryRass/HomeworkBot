@@ -474,7 +474,7 @@ async def remote_start_db_fill(data: DbStartData) -> None:
                     disciplines[discipline.short_name] = dis
 
                 session.add_all(disciplines.values())
-                session.flush()
+                await session.flush()
 
                 for it in data.groups:
                     group = Group(

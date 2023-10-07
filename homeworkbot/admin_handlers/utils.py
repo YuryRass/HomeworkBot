@@ -24,7 +24,7 @@ async def create_teachers_button(message: Message, callback_prefix: str):
 
         callback_prefix (str): префикс для значения callback_data.
     """
-    teachers = admin_crud.get_teachers()
+    teachers = await admin_crud.get_teachers()
     if len(teachers) < 1:
         await message.answer(text="В БД отсутствуют преподаватели!")
         return
@@ -52,8 +52,10 @@ async def start_upload_file_message(message: Message) -> Message:
     )
 
 
-async def finish_upload_file_message(message: Message,
-                                     text: str = '<i>Файл загружен!</i>') -> None:
+async def finish_upload_file_message(
+    message: Message,
+    text: str = '<i>Файл загружен!</i>'
+) -> None:
 
     """Завершение загрузки файла"""
 
@@ -68,7 +70,7 @@ async def create_groups_button(message: Message, callback_prefix: str) -> None:
 
         callback_prefix (str): начало названия коллбэка.
     """
-    groups = admin_crud.get_all_groups()
+    groups = await admin_crud.get_all_groups()
     if len(groups) < 1:
         await message.answer(text="В БД отсутствуют группы!")
         return
@@ -168,7 +170,7 @@ async def create_discipline_button(message: Message, callback_prefix: str):
         message (Message): Tg-сообщение.
         callback_prefix (str): префикс callback-a.
     """
-    disciplines = admin_crud.get_all_disciplines()
+    disciplines = await admin_crud.get_all_disciplines()
     if len(disciplines) < 1:
         await message.answer(text="В БД отсутствуют дисциплины!")
         return

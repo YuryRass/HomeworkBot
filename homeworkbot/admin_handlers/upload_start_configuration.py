@@ -17,7 +17,8 @@ from database.main_db.crud_exceptions import (
 from homeworkbot.routers import admin_router
 from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.configuration import bot
-from homeworkbot.admin_handlers.utils import start_upload_file_message, finish_upload_file_message
+from homeworkbot.admin_handlers.utils import \
+    start_upload_file_message, finish_upload_file_message
 
 from model.pydantic.db_start_data import DbStartData
 
@@ -28,7 +29,9 @@ class AdminStates(StatesGroup):
 
 @admin_router.message(IsOnlyAdmin(), Command(commands=['upconfig']),
                       StateFilter(default_state))
-async def handle_upload_start_configuration(message: Message, state: FSMContext):
+async def handle_upload_start_configuration(
+    message: Message, state: FSMContext
+):
     await _handle_upload_start_configuration(message, state)
 
 
@@ -38,7 +41,9 @@ async def handle_no_upload_start_configuration(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 
 
-async def _handle_upload_start_configuration(message: Message, state: FSMContext):
+async def _handle_upload_start_configuration(
+    message: Message, state: FSMContext
+):
     await message.answer(text="Загрузите json-файл для  наполнения БД")
     await state.set_state(state=AdminStates.upload_config)
 
@@ -68,7 +73,7 @@ async def handle_upload_discipline(message: Message, state: FSMContext):
             db_start_data = DbStartData(**data)
 
             # инициализация БД
-            admin_crud.remote_start_db_fill(db_start_data)
+            await admin_crud.remote_start_db_fill(db_start_data)
 
             # создание директорий с тестами и ответами студентов
             path = Path.cwd()

@@ -50,7 +50,7 @@ async def process_assign_teacher_to_discipline(call: CallbackQuery) -> None:
         case 'assignTeacherDis':
             teacher_id: int = int(call.data.split('_')[1])
             not_assign_teacher_disciplines: list[Discipline] = \
-                get_not_assign_teacher_disciplines(teacher_id)
+                await get_not_assign_teacher_disciplines(teacher_id)
 
             # создаем и отображаем список дисциплин для назначения преподу
             await create_callback_disciplines_button(
@@ -62,7 +62,7 @@ async def process_assign_teacher_to_discipline(call: CallbackQuery) -> None:
             discipline_id: int = int(call.data.split('_')[2])
 
             # назначаем дисциплину преподу
-            assign_teacher_to_discipline(teacher_id, discipline_id)
+            await assign_teacher_to_discipline(teacher_id, discipline_id)
 
             await call.message.edit_text(
                 text='Дисциплина назначена прподавателю'

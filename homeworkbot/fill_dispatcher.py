@@ -15,6 +15,16 @@ from homeworkbot.routers import (
     student_menu_router, student_router
 )
 
+available_updates = (
+    "callback_query", "channel_post",
+    "chat_member", "chosen_inline_result",
+    "edited_channel_post", "edited_message",
+    "inline_query", "message",
+    "my_chat_member", "poll_answer",
+    "poll", "pre_checkout_query",
+    "shipping_query", "chat_join_request"
+)
+
 
 def include_routers_in_dispatcher(dispatcher: Dispatcher) -> None:
     """Функция регистриурет роутеры в диспетчере.

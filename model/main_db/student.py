@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
-from database.main_db.database import Base
+from database.main_db.database import Base, bigint
 
 if TYPE_CHECKING:
     from model.main_db.group import Group
@@ -19,7 +19,7 @@ class Student(Base):
         ForeignKey('groups.id', ondelete='CASCADE'),
         nullable=False
     )
-    telegram_id: Mapped[int] = mapped_column(nullable=True, unique=True)
+    telegram_id: Mapped[bigint] = mapped_column(nullable=True, unique=True)
 
     group: Mapped["Group"] = relationship(
         back_populates="students"

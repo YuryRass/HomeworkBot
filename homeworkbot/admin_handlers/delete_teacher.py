@@ -32,7 +32,7 @@ async def callback_delete_teacher(call: CallbackQuery):
     match type_callback:
         case 'delTeacher':
             teacher_id = int(call.data.split('_')[1])
-            admin_crud.delete_teacher(teacher_id)
+            await admin_crud.delete_teacher(teacher_id)
             await call.message.edit_text(text="Преподаватель успешно удален")
         case _:
             await call.message.edit_text(text="Неизвестный формат для обработки данных")

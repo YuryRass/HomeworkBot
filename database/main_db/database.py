@@ -2,7 +2,9 @@
    к основной БД и создает все таблицы, хранящиеся в метаданных.
    По умолчанию не будет пересоздавать таблицы, если они уже присутсвуют в БД
 """
+from typing_extensions import Annotated
 
+from sqlalchemy import BigInteger
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.ext.asyncio import \
     AsyncSession, AsyncEngine, create_async_engine
@@ -17,9 +19,13 @@ from config import settings
 #     cursor.execute("PRAGMA foreign_keys=ON")
 #     cursor.close()
 
+bigint = Annotated[int, "bigint"]
+
 
 class Base(DeclarativeBase):
-    ...
+    type_annotation_map = {
+        bigint: BigInteger()
+    }
 
 
 engine: AsyncEngine = create_async_engine(url=settings.MAIN_DB_URL)

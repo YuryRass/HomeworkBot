@@ -1,32 +1,34 @@
 """Модуль реализует построение полного отчета на основе базового отчета"""
 import json
 
+from asyncinit import asyncinit
 from database.main_db import common_crud
 from model.pydantic.home_work import DisciplineHomeWorks
 from reports.base_report_builder import BaseReportBuilder, ReportFieldEnum
 
 
+@asyncinit
 class FullReportBuilder(BaseReportBuilder):
-
-    def __init__(self, group_id: int, discipline_id: int):
+    async def __init__(self, group_id: int, discipline_id: int):
         # создаем excel-файл с полным отчетом, где пока еще
         # содержатся данные базового отчета.
-        super().__init__(group_id, discipline_id, 'full_report')
+        await super().__init__(group_id, discipline_id, 'full_report')
 
-    def build_report(self) -> None:
+    async def build_report(self) -> None:
         # сначала создаем базовый отчет и к нему уже добавляем оставшиеся данные
         # для полноты сведений о выполнении лаб. работ студентами.
-        super().build_report()
+        await super().build_report()
 
         # получаем excel страницу, куда будем дозаписывать данные
         worksheet = self.wb.active
 
-        students = common_crud.get_students_from_group(self.group_id)
+        students = await common_crud.get_students_from_group(self.group_id)
         row = 1
         for student in students:
             # результаты по выполнению лаб. работ студентами
-            answers = common_crud.get_student_discipline_answer(student.id, self.discipline_id)
-            home_works = DisciplineHomeWorks(**json.loads(answers.home_work)).home_works
+            answers = await common_crud.get_student_discipline_answer(student.id, self.discipline_id)
+            home_works = DisciplineHomeWorks(
+                **json.loads(answers.home_work)).home_works
 
             if row == 1:
                 # дополняем заголовок справа номерами заданий для каждой лаб. работы

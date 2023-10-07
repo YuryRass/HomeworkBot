@@ -11,8 +11,10 @@ from homeworkbot.filters import IsOnlyAdmin, IsNotOnlyAdmin
 from homeworkbot.routers import admin_router, common_router
 
 
-@admin_router.message(IsOnlyAdmin(), Command(commands=['ban']),
-                      StateFilter(default_state))
+@admin_router.message(
+    IsOnlyAdmin(), Command(commands=['ban']),
+    StateFilter(default_state)
+)
 async def handle_ban_student(message: Message):
     await create_groups_button(message, 'groupBan')
 
@@ -36,13 +38,16 @@ async def callback_ban_student(call: CallbackQuery):
     match type_callback:
         case 'groupBan':
             group_id = int(call.data.split('_')[1])
-            students = common_crud.get_students_from_group_for_ban(group_id)
+            students = \
+                await common_crud.get_students_from_group_for_ban(group_id)
 
             # отображение в Tg чате списка студентов
             await create_callback_students_button(call, students, 'studentBan')
         case 'studentBan':
             telegram_id = int(call.data.split('_')[1])
-            common_crud.ban_student(telegram_id)
+            await common_crud.ban_student(telegram_id)
             await call.message.edit_text(text="Студент добавлен в бан-лист")
         case _:
-            await call.message.edit_text(text="Неизвестный формат для обработки данных")
+            await call.message.edit_text(
+                text="Неизвестный формат для обработки данных"
+            )

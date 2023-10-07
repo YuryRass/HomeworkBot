@@ -7,7 +7,7 @@ import asyncio
 from pathlib import Path
 
 from aiogram.types import (
-    Message, CallbackQuery, InlineKeyboardButton
+    CallbackQuery, InlineKeyboardButton
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types.input_file import FSInputFile
@@ -40,7 +40,9 @@ def __is_answer_prefix_callback(data: str) -> bool:
     return False
 
 
-@common_router.callback_query(lambda call: __is_answer_prefix_callback(call.data))
+@common_router.callback_query(
+    lambda call: __is_answer_prefix_callback(call.data)
+)
 async def callback_download_answers(call: CallbackQuery):
     """Обработчик анализа коллбэков для загрузки ответов студентов
 
@@ -53,7 +55,7 @@ async def callback_download_answers(call: CallbackQuery):
         # откуда будут загружаться ответы.
         case 'dowTAnswersDis':
             discipline_id = int(call.data.split('_')[1])
-            discipline = common_crud.get_discipline(discipline_id)
+            discipline = await common_crud.get_discipline(discipline_id)
 
             # путь до ответов студентов для указанной дисциплины
             path = Path.cwd().joinpath(discipline.path_to_answer)
@@ -62,12 +64,16 @@ async def callback_download_answers(call: CallbackQuery):
             # Директории имеют названия учебных групп.
             dirs = [it for it in path.iterdir() if it.is_dir()]
             if not dirs:
-                await call.message.edit_text(text="Директории для скачивания ответов отсутствуют")
+                await call.message.edit_text(
+                    text="Директории для скачивания ответов отсутствуют"
+                )
             else:
-                teacher_groups = teacher_crud.get_assign_groups(call.from_user.id)
+                teacher_groups = await teacher_crud.get_assign_groups(
+                    call.from_user.id
+                )
                 dirs = [
                     it for it in dirs if it.name in
-                        [tg.group_name for tg in teacher_groups]
+                    [tg.group_name for tg in teacher_groups]
                 ]
                 if not dirs:
                     await call.message.edit_text(
@@ -90,7 +96,7 @@ async def callback_download_answers(call: CallbackQuery):
         case 'dowTAnswersGr':
             group_name = call.data.split('_')[1]
             discipline_id = int(call.data.split('_')[2])
-            discipline = common_crud.get_discipline(discipline_id)
+            discipline = await common_crud.get_discipline(discipline_id)
 
             # путь до ответов студентов для выбранной дисциплины
             path = Path.cwd().joinpath(discipline.path_to_answer)
@@ -101,7 +107,9 @@ async def callback_download_answers(call: CallbackQuery):
             # скачивание ответов
             await _download_answer(call, path)
         case _:
-            await call.message.edit_text(text="Неизвестный формат для обработки данных")
+            await call.message.edit_text(
+                text="Неизвестный формат для обработки данных"
+            )
 
 
 async def _download_answer(call: CallbackQuery, path_to_group_folder: Path):
@@ -110,7 +118,8 @@ async def _download_answer(call: CallbackQuery, path_to_group_folder: Path):
     Args:
         call (CallbackQuery): коллбэк.
 
-        path_to_group_folder (Path): путь до ответов студентов некоторой учебной группы.
+        path_to_group_folder (Path): путь до ответов
+            студентов некоторой учебной группы.
     """
     await call.message.edit_text(text="Начинаем формировать отчет")
 

@@ -5,7 +5,6 @@ Example:
 """
 
 import asyncio
-
 from utils.init_app import init_app
 
 from homeworkbot import bot, dispatcher
@@ -24,7 +23,9 @@ async def main():
 
     # запускаем polling и систему проверки тестов в конкурентном режиме
     await asyncio.gather(
-        dispatcher.start_polling(bot),
+        dispatcher.start_polling(
+            bot, allowed_updates=fill.available_updates
+        ),
         AnswerProcessing(bot).run()
     )
 

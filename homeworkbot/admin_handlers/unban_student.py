@@ -26,7 +26,7 @@ async def create_unban_student_buttons(message: Message):
     Args:
         message (Message): сообщение в Tg чате.
     """
-    students = common_crud.get_ban_students(message.from_user.id)
+    students = await common_crud.get_ban_students(message.from_user.id)
     if len(students) < 1:
         await message.answer(text="Нет забаненных студентов!")
         return
@@ -55,7 +55,7 @@ async def callback_unban_student(call: CallbackQuery):
     match type_callback:
         case 'studentUnBan':
             telegram_id = int(call.data.split('_')[1])
-            common_crud.unban_student(telegram_id)
+            await common_crud.unban_student(telegram_id)
             await call.message.edit_text(text="Студент разбанен!")
         case _:
             await call.message.edit_text(

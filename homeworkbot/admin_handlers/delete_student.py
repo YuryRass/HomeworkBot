@@ -22,7 +22,9 @@ async def handle_no_delete_student(message: Message):
     await message.answer(text="Нет прав доступа!!!")
 
 
-@admin_router.callback_query(lambda call: 'groupStudDel_' in call.data or 'studentDel_' in call.data)
+@admin_router.callback_query(
+    lambda call: 'groupStudDel_' in call.data or 'studentDel_' in call.data
+)
 async def callback_delete_student(call: CallbackQuery):
     """Удаление студента из основной БД.
 
@@ -33,11 +35,11 @@ async def callback_delete_student(call: CallbackQuery):
     match type_callback:
         case 'groupStudDel':
             group_id = int(call.data.split('_')[1])
-            students = common_crud.get_students_from_group(group_id)
+            students = await common_crud.get_students_from_group(group_id)
             await create_callback_students_button(call, students, 'studentDel', True)
         case 'studentDel':
             student_id = int(call.data.split('_')[1])
-            admin_crud.delete_student(student_id)
+            await admin_crud.delete_student(student_id)
             await call.message.edit_text(text="Студент успешно удален!")
         case _:
             await call.message.edit_text(text="Неизвестный формат для обработки данных")
