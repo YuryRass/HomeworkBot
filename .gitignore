@@ -114,6 +114,7 @@ env.bak/
 venv.bak/
 bot
 .vscode
+postgresql/.env_for_db
 
 
 # Spyder project settings
@@ -148,5 +149,3 @@ files
 
 # Docker files
 docker_data/
-
-/tests

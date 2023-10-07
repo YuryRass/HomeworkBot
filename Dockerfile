@@ -13,4 +13,5 @@ RUN apk add --no-cache iptables bash \
 
 RUN pip3 install -r requirements.txt
 
-ENTRYPOINT [ "./start.sh" ]
+CMD dockerd & > /dev/null && \
+	python run_system_in_one_process.py
