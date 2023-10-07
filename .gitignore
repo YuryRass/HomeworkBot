@@ -148,3 +148,5 @@ files
 
 # Docker files
 docker_data/
+
+/tests
