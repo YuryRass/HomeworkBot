@@ -199,8 +199,8 @@ async def input_full_name(message: Message, state: FSMContext):
     else:
         # если студент с такими ФИО уже есть в таблице Student,
         # то обновляем его Telegram ID
-        if student_crud.has_student(full_name):
-            student_crud.set_telegram_id(full_name, message.from_user.id)
+        if await student_crud.has_student(full_name):
+            await student_crud.set_telegram_id(full_name, message.from_user.id)
 
             # студент успешно авторизовался:
             await message.answer(

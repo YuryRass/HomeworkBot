@@ -13,6 +13,7 @@ class DockerBuilder:
     """
     Класс формирования Dockerfile
     """
+
     def __init__(
         self, path_to_folder: Path, student_id: int, lab_number: int
     ) -> None:
@@ -58,7 +59,7 @@ class DockerBuilder:
     def get_run_result(self) -> str:
         return self.report_data
 
-    def run_docker(self) -> str:
+    def run_docker(self):
         self._build_docker_file()
         # создаем докер том с названием = self.tag_name
         some_volume = docker.volume.create(self.tag_name)

@@ -16,7 +16,7 @@ async def create_student_disciplines_button(message: Message, prefix: str):
         message (Message): Tg сообщение.
         prefix (str): коллбэк префикс.
     """
-    disciplines = student_crud.get_assign_disciplines(message.from_user.id)
+    disciplines = await student_crud.get_assign_disciplines(message.from_user.id)
     if len(disciplines) < 1:
         await message.answer(text="В БД отсутствуют дисциплины!")
         return

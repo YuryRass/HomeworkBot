@@ -6,9 +6,10 @@ from model.pydantic.home_work import DisciplineHomeWorks
 from model.pydantic.student_report import StudentReport
 
 
-def run_deadline_report_builder(
+async def run_deadline_report_builder(
         student_id: int,
-        discipline_id: int) -> str:
+        discipline_id: int
+) -> str:
     """Возвращает информацию по ближайшему дедлайну.
 
     Args:
@@ -19,12 +20,11 @@ def run_deadline_report_builder(
         str: информация о ближайшем дедлайне.
     """
     student_report = StudentReport()
-    student = common_crud.get_student_from_id(student_id)
-    student_answer = common_crud.get_student_discipline_answer(
+    student = await common_crud.get_student_from_id(student_id)
+    student_answer = await common_crud.get_student_discipline_answer(
         student_id,
         discipline_id
     )
-
     student_report.full_name = student.full_name
     home_works = DisciplineHomeWorks(
         **json.loads(student_answer.home_work)
@@ -45,10 +45,10 @@ def run_deadline_report_builder(
             deadline_failed += 1
 
     if deadline_failed == len(home_works):
-        return f'У меня для тебя плохие новости! Прожми батоны, т.к. ' \
-               f'завалены все дедлайны!!!'
+        return 'У меня для тебя плохие новости! Прожми батоны, т.к. ' \
+               'завалены все дедлайны!!!'
     elif nearest_deadline is not None:
         return f'Ближайший дедлайн {nearest_deadline} в 23:59'
     else:
-        return f'Сроки всех дедлайнов истекли! Если имеешь задолженность - ' \
-               f'напрягай батоны!!!'
+        return 'Сроки всех дедлайнов истекли! Если имеешь задолженность - ' \
+               'напрягай батоны!!!'

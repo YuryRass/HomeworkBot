@@ -44,17 +44,16 @@ class TaskProcessing:
         while True:
             await asyncio.sleep(2)
             if await queue_in_crud.is_not_empty():
-                record = queue_in_crud.get_first_record()
+                record = await queue_in_crud.get_first_record()
                 await asyncio.gather(
-                    asyncio.to_thread(
-                        _run_prepare_docker,
+                    _run_prepare_docker(
                         record,
                         self.temp_folder_path,
                     )
                 )
 
 
-def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
+async def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
     """
     Функция подготовки файлов для контейнера и его последующего запуска
 
@@ -68,9 +67,9 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
 
     # проверка ответов студентов на шаблон тестирования
     folder_builder = FolderBuilder(temp_folder_path, record)
-    docker_folder_path = folder_builder.build()
+    docker_folder_path = await folder_builder.build()
     if folder_builder.has_rejected_files():
-        rejected_crud.add_record(
+        await rejected_crud.add_record(
             record.telegram_id,
             record.chat_id,
             TestRejectedFiles(
@@ -88,7 +87,7 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
     keywords_controller = KeyWordsController(docker_folder_path)
     keywords_controller.run()
     if keywords_controller.has_rejected_files():
-        rejected_crud.add_record(
+        await rejected_crud.add_record(
             record.telegram_id,
             record.chat_id,
             TestRejectedFiles(
@@ -117,11 +116,11 @@ def _run_prepare_docker(record: QueueIn, temp_folder_path: Path) -> None:
     docker_builder.run_docker()
 
     lab_report = LabReport(**json.loads(docker_builder.get_run_result()))
-    common_crud.write_test_result(lab_report, record)
-    _send_test_result_to_bot(lab_report, record)
+    await common_crud.write_test_result(lab_report, record)
+    await _send_test_result_to_bot(lab_report, record)
 
 
-def _send_test_result_to_bot(lab_report: LabReport, record: QueueIn) -> None:
+async def _send_test_result_to_bot(lab_report: LabReport, record: QueueIn) -> None:
     """
     Функция отправки в промежуточную БД результата тестирования
 
@@ -154,7 +153,7 @@ def _send_test_result_to_bot(lab_report: LabReport, record: QueueIn) -> None:
                 )
             )
 
-    queue_out_crud.add_record(
+    await queue_out_crud.add_record(
         record.telegram_id,
         record.chat_id,
         result_report

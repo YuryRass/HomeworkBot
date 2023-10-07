@@ -12,6 +12,8 @@ from testing_tools.checker.task_processing import TaskProcessing
 
 
 async def main():
+    # инициализация БД
+    await init_app()
 
     temp_path = Path.cwd()
     temp_path = Path(temp_path.joinpath(settings.TEMP_REPORT_DIR))
@@ -31,5 +33,4 @@ async def main():
     )
 
 if __name__ == '__main__':
-    init_app()
     asyncio.run(main())

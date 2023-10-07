@@ -18,6 +18,7 @@ class FolderBuilder:
     студентов и настроек политики тестирования и откланяющий файлы ответов,
     на которые нет тестов
     """
+
     def __init__(self, temp_path: Path, raw_data: QueueIn):
         """
         :param temp_path: путь до временной директории
@@ -34,13 +35,15 @@ class FolderBuilder:
     def get_lab_number(self) -> int:
         return self.answer.lab_number
 
-    def build(self) -> Path:
+    async def build(self) -> Path:
         """Функция формирования папки для запуска docker контейнеров
 
         Returns:
             Path: путь до папки для запуска docker контейнеров
         """
-        discipline = common_crud.get_discipline(self.answer.discipline_id)
+        discipline = await common_crud.get_discipline(
+            self.answer.discipline_id
+        )
 
         # полный путь до директории с тестами
         test_path = Path.cwd().joinpath(

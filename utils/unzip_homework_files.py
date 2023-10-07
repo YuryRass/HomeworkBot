@@ -26,8 +26,8 @@ async def save_homework_file(
 
     :return: список путей до распакованных файлов ответов
     """
-    student = get_student_by_tg_id(user_tg_id)
-    group = get_group(student.group_id)
+    student = await get_student_by_tg_id(user_tg_id)
+    group = await get_group(student.group_id)
 
     path = Path.cwd()
     path = path.joinpath(

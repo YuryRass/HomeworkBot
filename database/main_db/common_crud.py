@@ -17,6 +17,7 @@ from model.main_db.discipline import Discipline
 from model.main_db.group import Group
 from model.main_db.student_ban import StudentBan
 
+import sqlalchemy.orm
 import utils.homework_utils as utils
 
 from model.pydantic.queue_in_raw import QueueInRaw
@@ -310,7 +311,7 @@ async def write_test_result(
             )
         )
 
-        assign_discipline: AssignedDiscipline = res.scalars.first()
+        assign_discipline: AssignedDiscipline = res.scalars().first()
 
         hwork = utils.homeworks_from_json(assign_discipline.home_work)
 

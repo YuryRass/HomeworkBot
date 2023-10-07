@@ -20,10 +20,14 @@ async def callback_nearest_deadline(call: CallbackQuery):
     match type_callback:
         case 'nearestDeadline':
             discipline_id = int(call.data.split('_')[1])
-            student = student_crud.get_student_by_tg_id(call.from_user.id)
+            student = await student_crud.get_student_by_tg_id(
+                call.from_user.id
+            )
             await __create_report(call, student.id, discipline_id)
         case _:
-            await call.message.edit_text(text="Неизвестный формат для обработки данных")
+            await call.message.edit_text(
+                text="Неизвестный формат для обработки данных"
+            )
 
 
 async def __create_report(
@@ -34,9 +38,8 @@ async def __create_report(
     """Отображает в Tg чате отчет о ближайшего дедлайне для студента"""
     await call.message.edit_text(text="Начинаем расчет ^_^")
 
-    report = await asyncio.gather(
-        asyncio.to_thread(run_deadline_report_builder, student_id, discipline_id)
+    student_report = await asyncio.gather(
+        run_deadline_report_builder(student_id, discipline_id)
     )
-    student_report = report[0]
 
     await call.message.edit_text(text=f'<i>{student_report}</i>')

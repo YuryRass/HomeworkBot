@@ -35,7 +35,7 @@ async def handle_upload_answer(call: CallbackQuery, state: FSMContext):
     match type_callback:
         case "uploadAnswer":
             discipline_id = int(call.data.split("_")[1])
-            discipline = common_crud.get_discipline(discipline_id)
+            discipline = await common_crud.get_discipline(discipline_id)
             labs_kb: InlineKeyboardBuilder = InlineKeyboardBuilder()
             labs_kb.row(
                 *[
@@ -53,9 +53,11 @@ async def handle_upload_answer(call: CallbackQuery, state: FSMContext):
             )
         case "labNumber":
             number = int(call.data.split("_")[1])
-            if not is_test_folder_exist(int(call.data.split("_")[2]), number):
+            if not await is_test_folder_exist(
+                int(call.data.split("_")[2]), number
+            ):
                 await call.message.edit_text(
-                    text="К сожалению, тесты для этой работы еще не готовы =((",
+                    text="К сожалению, тесты для этой работы еще не готовы!",
                 )
                 return
             await call.message.edit_text(
@@ -72,8 +74,10 @@ async def handle_upload_answer(call: CallbackQuery, state: FSMContext):
             )
 
 
-@student_router.message(StateFilter(StudentStates.upload_answer),
-                        F.content_type == ContentType.DOCUMENT)
+@student_router.message(
+    StateFilter(StudentStates.upload_answer),
+    F.content_type == ContentType.DOCUMENT
+)
 async def handle_student_docs(message: Message, state: FSMContext):
     """Обработчик по загрузке ответов студентов.
 
@@ -90,7 +94,7 @@ async def handle_student_docs(message: Message, state: FSMContext):
     lab_num = data["labNumber"]
     discipline_id = data["discipline_id"]
 
-    discipline = common_crud.get_discipline(discipline_id)
+    discipline = await common_crud.get_discipline(discipline_id)
 
     file_name = message.document.file_name
     if file_name[-4:] == ".zip":
@@ -112,7 +116,7 @@ async def handle_student_docs(message: Message, state: FSMContext):
             discipline.path_to_answer,
         )
 
-        queue_in_crud.add_record(
+        await queue_in_crud.add_record(
             message.from_user.id,
             message.chat.id,
             QueueInRaw(

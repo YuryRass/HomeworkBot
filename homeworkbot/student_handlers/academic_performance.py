@@ -21,7 +21,9 @@ async def callback_academic_performance(call: CallbackQuery):
     match type_callback:
         case 'academicPerf':
             discipline_id = int(call.data.split('_')[1])
-            student = student_crud.get_student_by_tg_id(call.from_user.id)
+            student = await student_crud.get_student_by_tg_id(
+                call.from_user.id
+            )
             await __create_report(call, student.id, discipline_id)
         case _:
             await call.message.edit_text(
@@ -42,10 +44,13 @@ async def __create_report(
     """
     await call.message.edit_text(text="Начинаем формировать отчет")
 
-    # Создаем отчет об успеваемости конкретного студента в отдельном потоке
+    # Создаем отчет об успеваемости конкретного студента
     report = await asyncio.gather(
-        asyncio.to_thread(run_interactive_report_builder, student_id, discipline_id)
+        run_interactive_report_builder(
+            student_id, discipline_id
+        )
     )
+
     student_report: StudentReport = report[0]
     text_report = f'<i>Студент</i>: <b>{student_report.full_name}</b>\n' + \
         f'<i>Кол-во баллов</i>: {student_report.points}\n' + \

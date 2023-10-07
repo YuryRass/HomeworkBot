@@ -1,7 +1,11 @@
+from typing import TYPE_CHECKING
 from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.main_db.database import Base
+
+if TYPE_CHECKING:
+    from model.main_db.student import Student
 
 
 class AssignedDiscipline(Base):
@@ -17,7 +21,8 @@ class AssignedDiscipline(Base):
     )
     point: Mapped[float] = mapped_column(default=0)
     home_work: Mapped[str] = mapped_column(
-        JSON, nullable=False)  # DisciplineHomeWorks
+        JSON, nullable=False
+    )  # DisciplineHomeWorks
 
     student: Mapped["Student"] = relationship(
         back_populates="homeworks"
