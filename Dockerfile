@@ -5,7 +5,6 @@ ENV APP_INSTALL_PATH /opt/${APP_NAME}
 
 WORKDIR ${APP_INSTALL_PATH}
 
-COPY docker_scripts .
 COPY . .
 
 RUN apk add --no-cache iptables bash \
